@@ -2,6 +2,7 @@ package com.note11.engabi.ui.main
 
 import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -56,6 +57,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel>()
+
     @ExperimentalMaterialApi
     private lateinit var drawerState: BottomDrawerState
 
@@ -450,7 +452,37 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startRecording() {
-        ForegroundServiceUtils.runForegroundService(applicationContext, ForegroundServiceUtils.ForegroundServiceType.SOUND_RECORD_SERVICE)
+    private fun startRecording() = lifecycleScope.launch {
+        val permissionResult =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                TedPermission.create()
+                    .setPermissions(
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.FOREGROUND_SERVICE
+                    )
+                    .check()
+            } else {
+                TedPermission.create()
+                    .setPermissions(
+                        Manifest.permission.RECORD_AUDIO
+                    )
+                    .check()
+            }
+        if (permissionResult.isGranted) {
+            ForegroundServiceUtils.runForegroundService(
+                applicationContext,
+                ForegroundServiceUtils.ForegroundServiceType.SOUND_RECORD_SERVICE
+            )
+            goHome()
+        } else {
+            Toast.makeText(this@MainActivity, "권한을 모두 허용해주세요", Toast.LENGTH_SHORT)
+                .show()
+        }
+    }
+
+    private fun goHome() = Intent(Intent.ACTION_MAIN).run {
+        addCategory(Intent.CATEGORY_HOME)
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(this)
     }
 }
