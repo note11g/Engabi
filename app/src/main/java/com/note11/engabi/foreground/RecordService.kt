@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.note11.engabi.R
-import com.note11.engabi.util.RecordDestoryService
+import com.note11.engabi.util.GetFilesUtil
 import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -73,7 +73,7 @@ class RecordService : Service() {
 
         builder.setSmallIcon(R.mipmap.ic_launcher)
             .setContentText("녹음중입니다.")
-            .setContentIntent(PendingIntent.getService(applicationContext, 0, Intent(applicationContext, RecordDestoryService::class.java), PendingIntent.FLAG_CANCEL_CURRENT))
+            .setContentIntent(PendingIntent.getService(applicationContext, 0, Intent(applicationContext, RecordDestroyService::class.java), PendingIntent.FLAG_CANCEL_CURRENT))
 
         startForeground(1, builder.build())
     }
@@ -96,6 +96,9 @@ class RecordService : Service() {
         instance = null
         
         Log.i("MediaRecorder", "녹음 서비스 종료")
+        for(file in GetFilesUtil.getFiles(applicationContext)) {
+            Log.i("MediaRecorder", file.name)
+        }
     }
 
     private fun recordStart() {
@@ -128,10 +131,11 @@ class RecordService : Service() {
 
         //파일 경로 확인용
         Log.i("MediaRecorder", "저장 : $filePath")
+        Toast.makeText(applicationContext, "저장되었습니다.", Toast.LENGTH_SHORT)
         mediaRecorder = null
     }
 
-    private fun destroy() {
+    public fun destroy() {
         stopForeground(true)
     }
 }
