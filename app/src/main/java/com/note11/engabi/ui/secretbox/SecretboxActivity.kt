@@ -127,186 +127,104 @@ class SecretboxActivity : ComponentActivity() {
             }
         }
     }
-}
 
-@Composable
-fun BackToHome(onTap: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .padding(start = 16.dp, top = 20.dp)
-            .clip(RoundedCornerShape(4.dp))
-            .clickable { onTap() }
-            .padding(0.dp, 4.dp, 4.dp, 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            modifier = Modifier.size(20.dp),
-            imageVector = Icons.Filled.ArrowBackIos,
-            contentDescription = "홈으로 돌아가기",
-            tint = Color(0xFF7E9EDE)
-        )
-        Text(
-            "홈",
-            color = Color(0xFF7E9EDE),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-        )
-    }
-}
 
-@Composable
-fun UploadFab() {
-    FloatingActionButton(onClick = {
-    }, backgroundColor = Color(0xFF7E9EDE)) {
-        Icon(
-            Icons.Filled.Forward,
-            contentDescription = "",
-            modifier = Modifier
-                .size(32.dp)
-                .rotate(270f),
-            tint = PureWhite,
-        )
-    }
-}
-
-@Composable
-fun VoiceRecPage() {
-    val context = LocalContext.current
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp, 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-
-    }
-}
-
-@Composable
-fun VideoRecPage() {
-    val context = LocalContext.current
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp, 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-
-    }
-}
-
-@Composable
-fun PostCard(post: Post, onTap: (Post) -> Unit) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color.White)
-            .clickable { onTap(post) }
-            .padding(18.dp, 18.dp, 18.dp, 8.dp)
-    ) {
-        Text(post.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.size(12.dp))
-        Text(post.content)
-        Spacer(Modifier.size(10.dp))
-        Divider(color = Color(0xFFF3F3F3), thickness = 1.dp)
-        Spacer(Modifier.size(2.dp))
+    @Composable
+    fun BackToHome(onTap: () -> Unit) {
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .padding(start = 16.dp, top = 20.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .clickable { onTap() }
+                .padding(0.dp, 4.dp, 4.dp, 4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row {
-                Row(modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(4.dp)
-                    )
-                    .clickable { }
-                    .padding(horizontal = 4.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (post.isMyLike) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        contentDescription = "좋아요",
-                        tint = if (post.isMyLike) Color(0xFFE87373) else Color(0xFF949494),
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(Modifier.size(8.dp))
-                    Text(
-                        "${post.like}", color = Color(0xFF949494)
-                    )
-                }
-                Spacer(Modifier.size(6.dp))
-                Row(modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(4.dp)
-                    )
-                    .clickable { }
-                    .padding(horizontal = 4.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Comment,
-                        contentDescription = "댓글보기",
-                        tint = Color(0xFF949494),
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(Modifier.size(8.dp))
-                    Text(
-                        "${post.comments.size}",
-                        color = Color(0xFF949494),
-                    )
-                }
-            }
+            Icon(
+                modifier = Modifier.size(20.dp),
+                imageVector = Icons.Filled.ArrowBackIos,
+                contentDescription = "홈으로 돌아가기",
+                tint = Color(0xFF7E9EDE)
+            )
             Text(
-                TimeUtil.timeToKorFormat(post.atPost),
-                color = Color(0xFF949494),
-                fontSize = 12.sp
+                "홈",
+                color = Color(0xFF7E9EDE),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
             )
         }
     }
-}
 
-data class Post(
-    val title: String,
-    val content: String,
-    val photoUrl: String,
-    val like: Int,
-    var isMyLike: Boolean,
-    val atPost: Long,
-    val comments: List<Comment>,
-    val user: UserModel
-)
-
-data class Comment(
-    val content: String,
-    val like: Int,
-    var isMyLike: Boolean,
-    val atPost: Long,
-    val reComments: List<ReComment>,
-    val user: UserModel
-)
-
-data class ReComment(
-    val content: String,
-    val like: Int,
-    var isMyLike: Boolean,
-    val atPost: Long,
-    val user: UserModel
-)
-
-object TimeUtil {
-    private const val MAX_SEC = 60
-    private const val MAX_MIN = 60
-    private const val MAX_HOUR = 24
-    private const val MAX_DAY = 30
-    private const val MAX_MONTH = 12
-
-    fun timeToKorFormat(comparedTime: Long): String {
-        val nowTime = System.currentTimeMillis()
-        var diffTime: Long = (nowTime - comparedTime) / 1000
-        return when {
-            diffTime < MAX_SEC -> "방금 전"
-            MAX_SEC.let { diffTime /= it; diffTime } < MAX_MIN -> "${diffTime}분 전"
-            MAX_MIN.let { diffTime /= it; diffTime } < MAX_HOUR -> "${diffTime}시간 전"
-            MAX_HOUR.let { diffTime /= it; diffTime } < MAX_DAY -> "${diffTime}일 전"
-            MAX_DAY.let { diffTime /= it; diffTime } < MAX_MONTH -> "${diffTime}달 전"
-            else -> "${diffTime}년 전"
+    @Composable
+    fun UploadFab() {
+        FloatingActionButton(onClick = {
+        }, backgroundColor = Color(0xFF7E9EDE)) {
+            Icon(
+                Icons.Filled.Forward,
+                contentDescription = "",
+                modifier = Modifier
+                    .size(32.dp)
+                    .rotate(270f),
+                tint = PureWhite,
+            )
         }
     }
+
+    @Composable
+    fun VoiceRecPage() {
+        val context = LocalContext.current
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp, 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+
+        }
+    }
+
+    @Composable
+    fun VideoRecPage() {
+        val context = LocalContext.current
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp, 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+
+        }
+    }
+
+//    @Composable
+//    fun PostCard(post: Post, onTap: (Post) -> Unit) {
+//        Column(
+//            modifier = Modifier
+//                .clip(RoundedCornerShape(8.dp))
+//                .background(Color.White)
+//                .clickable { onTap(post) }
+//                .padding(18.dp, 18.dp, 18.dp, 8.dp)
+//        ) {
+//
+//        }
+//    }
+
+    object TimeUtil {
+        private const val MAX_SEC = 60
+        private const val MAX_MIN = 60
+        private const val MAX_HOUR = 24
+        private const val MAX_DAY = 30
+        private const val MAX_MONTH = 12
+
+        fun timeToKorFormat(comparedTime: Long): String {
+            val nowTime = System.currentTimeMillis()
+            var diffTime: Long = (nowTime - comparedTime) / 1000
+            return when {
+                diffTime < MAX_SEC -> "방금 전"
+                MAX_SEC.let { diffTime /= it; diffTime } < MAX_MIN -> "${diffTime}분 전"
+                MAX_MIN.let { diffTime /= it; diffTime } < MAX_HOUR -> "${diffTime}시간 전"
+                MAX_HOUR.let { diffTime /= it; diffTime } < MAX_DAY -> "${diffTime}일 전"
+                MAX_DAY.let { diffTime /= it; diffTime } < MAX_MONTH -> "${diffTime}달 전"
+                else -> "${diffTime}년 전"
+            }
+        }
+    }
+
 }

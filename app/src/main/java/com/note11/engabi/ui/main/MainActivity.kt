@@ -436,7 +436,7 @@ class MainActivity : ComponentActivity() {
 
             Text(
                 "녹음 시작하기를 누르면 앱에서 나가지며, 녹음이 시작됩니다.\n" +
-                        "녹음 중지는 알림패널에서 가능합니다.",
+                        "녹음을 중지하시려면, 볼륨 버튼 두개를 동시에 약 2초간 눌러주세요.",
                 fontWeight = FontWeight.Medium,
                 color = LightGray300,
                 fontSize = 14.sp,
@@ -468,6 +468,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @ExperimentalMaterialApi
     private fun startRecording() = lifecycleScope.launch {
         val permissionResult =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -489,6 +490,7 @@ class MainActivity : ComponentActivity() {
                 applicationContext,
                 ForegroundServiceUtils.ForegroundServiceType.SOUND_RECORD_SERVICE
             )
+            drawerState.close()
             goHome()
         } else {
             Toast.makeText(this@MainActivity, "권한을 모두 허용해주세요", Toast.LENGTH_SHORT)
