@@ -1,9 +1,6 @@
 package com.note11.engabi.foreground
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
 import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Build
@@ -13,6 +10,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.note11.engabi.R
+import com.note11.engabi.util.RecordDestoryService
 import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -42,7 +40,6 @@ class RecordService : Service() {
 
         //음성 기록 파일 생성(테스트용)
 //        var file = File(applicationContext.getExternalFilesDir(null), "${UUID.randomUUID()}.mp3")
-
 
         val file = File(
             applicationContext.filesDir,
@@ -76,6 +73,7 @@ class RecordService : Service() {
 
         builder.setSmallIcon(R.mipmap.ic_launcher)
             .setContentText("녹음중입니다.")
+            .setContentIntent(PendingIntent.getService(applicationContext, 0, Intent(applicationContext, RecordDestoryService::class.java), PendingIntent.FLAG_CANCEL_CURRENT))
 
         startForeground(1, builder.build())
     }
@@ -96,6 +94,8 @@ class RecordService : Service() {
         stopForeground(true)
         isRunnable = false
         instance = null
+        
+        Log.i("MediaRecorder", "녹음 서비스 종료")
     }
 
     private fun recordStart() {
