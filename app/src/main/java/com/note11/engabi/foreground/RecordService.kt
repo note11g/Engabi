@@ -136,6 +136,6 @@ class RecordService : Service() {
     }
 
     public fun destroy() {
-        stopForeground(true)
+        stopSelf()
     }
 }
