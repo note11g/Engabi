@@ -90,7 +90,14 @@
             android:name=".ui.video.VideoActivity"
             android:exported="false"
             android:theme="@style/Theme.Engabi.NoActionBar" />
-
+        <activity
+            android:name=".ui.community.CommunityMainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Engabi.NoActionBar" />
+        <activity
+            android:name=".ui.secretbox.SecretboxActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Engabi.NoActionBar" />
     </application>
 
 </manifest>

@@ -47,7 +47,9 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.lifecycle.lifecycleScope
 import com.gun0912.tedpermission.coroutine.TedPermission
 import com.note11.engabi.R
+import com.note11.engabi.ui.community.CommunityMainActivity
 import com.note11.engabi.ui.login.LoginActivity
+import com.note11.engabi.ui.secretbox.SecretboxActivity
 import com.note11.engabi.ui.theme.*
 import com.note11.engabi.ui.util.CustomBottomDrawer
 import com.note11.engabi.ui.video.VideoActivity
@@ -178,10 +180,16 @@ class MainActivity : ComponentActivity() {
 
         Spacer(Modifier.size(8.dp))
 
-        if (lockState.value) ListBox("비밀 창고", onClick = { lockState.value = false }) { onClick ->
+        if (lockState.value) ListBox("비밀 창고", onClick = {
+            startActivity(Intent(this, SecretboxActivity::class.java))
+//            lockState.value = false
+        }) { onClick ->
             ListBoxBlurItem(onClick)
         }
-        else ListBox("비밀 창고", onClick = { lockState.value = true }) {
+        else ListBox("비밀 창고", onClick = {
+//            lockState.value = true
+            startActivity(Intent(this, SecretboxActivity::class.java))
+        }) {
             Column {
                 for (i in 1..3) {
                     ListBoxItem(
@@ -200,11 +208,16 @@ class MainActivity : ComponentActivity() {
             subTitle = "수집한 증거들을 이용하여 신고할 수 있어요",
             painterId = R.drawable.home_report,
             iconHeight = 40.dp
-        ) {}
+        ) {
+            Toast.makeText(applicationContext, "신고 기능은 아직 준비중입니다.", Toast.LENGTH_LONG).show()
+        }
 
         Spacer(Modifier.size(8.dp))
 
-        ListBox("커뮤니티", onClick = {}) {
+        ListBox("커뮤니티", onClick = {
+            startActivity(Intent(this@MainActivity, CommunityMainActivity::class.java))
+            Toast.makeText(applicationContext, "커뮤니티 기능은 아직 준비중입니다.", Toast.LENGTH_LONG).show()
+        }) {
             Column {
                 val strList = listOf(
                     "나 오늘 뭐 먹을까 같이 고민 좀 해주라",
@@ -217,7 +230,10 @@ class MainActivity : ComponentActivity() {
                         "작성글 제목 ${4 - i}",
                         strList[i - 1],
                         "${17 - i}시간 전"
-                    ) {}
+                    ) {
+                        Toast.makeText(applicationContext, "커뮤니티 기능은 아직 준비중입니다.", Toast.LENGTH_LONG)
+                            .show()
+                    }
                 }
             }
         }

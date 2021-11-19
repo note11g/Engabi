@@ -106,7 +106,8 @@ class VideoActivity : ComponentActivity() {
                                         Toast
                                             .makeText(
                                                 this@VideoActivity,
-                                                "녹화를 시작합니다.\n종료하려면 화면을 빠르게 두번 터치하세요.",
+                                                "녹화 기능은 버그로 인해 차후 지원 예정입니다. (cameraX의 호환성 문제로 Camera2로 마이그레이션 예정)",
+//                                                "녹화를 시작합니다.\n종료하려면 화면을 빠르게 두번 터치하세요.",
                                                 Toast.LENGTH_LONG
                                             )
                                             .show()
