@@ -4,7 +4,7 @@
 
 ## 실행방법
 1. 압축 파일 내에 Engabi/app/build/outputs/apk/debug/app-debug.apk파일을 실행하거나, 
-같은 파일인 https://github.com/note11g/Engabi/releases/download/alpha/app-debug.apk를 다운받습니다.
+같은 파일인 https://github.com/note11g/Engabi/releases/download/alpha/app-debug.apk 를 다운받습니다.
 
 2. 안드로이드 스마트폰 (Android 7.0이상, 안드로이드 10~11 권장)에 해당 apk파일을 넣고, 설치합니다.
 
