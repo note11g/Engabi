@@ -14,10 +14,11 @@ class ForegroundServiceUtils {
                 else -> null
             } ?: return
 
+            val intent = Intent(context, target)
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                context.startForegroundService(Intent(context, target))
+                context.startForegroundService(intent)
             else
-                context.startService(Intent(context, target))
+                context.startService(intent)
         }
 
         fun getAudioFiles(context: Context) : ArrayList<File> {
