@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">은가비</string>
+    <string name="access_description">음량 버튼이 길게 눌릴 때, 녹음을 시작할 수 있도록 합니다.</string>
+</resources>

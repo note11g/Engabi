@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "862996218663",
+    "project_id": "engabi-1b608",
+    "storage_bucket": "engabi-1b608.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862996218663:android:8dfee71b4648399bb3df02",
+        "android_client_info": {
+          "package_name": "com.note11.engabi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "862996218663-sn7qql846s84lgor2440805gkvmodoog.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.note11.engabi",
+            "certificate_hash": "9b091dc1742cf6719f0bc9bb9a29fe1a1d188aec"
+          }
+        },
+        {
+          "client_id": "862996218663-qmkt0njr4q68kk3nt2f10vk26tam52ac.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmH844izF8tw7pVyRluUTOU1ixVNMWEcU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "862996218663-qmkt0njr4q68kk3nt2f10vk26tam52ac.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
