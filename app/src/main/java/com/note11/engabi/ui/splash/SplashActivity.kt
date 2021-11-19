@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.kakao.sdk.common.util.Utility
 import com.note11.engabi.R
 import com.note11.engabi.ui.login.LoginActivity
 import com.note11.engabi.ui.main.MainActivity
@@ -41,6 +43,9 @@ class SplashActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val keyHash = Utility.getKeyHash(this)
+        Log.i("AndroidKeyHash", keyHash)
+
         setContent {
             EngabiTheme {
                 Surface(color = Color.Transparent) {
