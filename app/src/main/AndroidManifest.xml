@@ -3,8 +3,8 @@
     package="com.note11.engabi">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -21,13 +21,23 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Engabi">
         <service
+            android:name=".util.RecordDestoryService"
+            android:exported="false"></service>
+        <service
+            android:name=".util.RecordDestroyService"
+            android:enabled="true"
+            android:exported="true" />
+        <service
+            android:name=".util.RecordDestory"
+            android:exported="false" />
+        <service
             android:name=".foreground.RecordService"
             android:enabled="true"
             android:exported="true" />
         <service
             android:name=".util.AccessibilityService"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="false">
+            android:exported="false"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>

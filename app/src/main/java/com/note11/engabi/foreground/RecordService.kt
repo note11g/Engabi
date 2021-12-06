@@ -11,6 +11,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.note11.engabi.R
 import com.note11.engabi.util.GetFilesUtil
+import com.note11.engabi.util.RecordDestoryService
 import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -71,9 +72,13 @@ class RecordService : Service() {
             nm.createNotificationChannel(channel)
         val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
 
+        val intent = Intent(applicationContext, RecordDestoryService::class.java)
+        intent.setAction("Close")
+        val pending = PendingIntent.getService(applicationContext, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+
         builder.setSmallIcon(R.mipmap.ic_launcher)
             .setContentText("녹음중입니다.")
-            .setContentIntent(PendingIntent.getService(applicationContext, 0, Intent(applicationContext, RecordDestroyService::class.java), PendingIntent.FLAG_CANCEL_CURRENT))
+            .addAction(0, "종료", pending)
 
         startForeground(1, builder.build())
     }
