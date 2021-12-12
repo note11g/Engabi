@@ -3,6 +3,7 @@ plugins {
     id 'kotlin-android'
     id 'com.google.gms.google-services'
     id 'kotlin-parcelize'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
@@ -101,6 +102,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore-ktx'
     implementation 'com.google.firebase:firebase-storage'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
 
     //retrofit & gson
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'

@@ -464,7 +464,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     .padding(vertical = 16.dp))
-//28,38
             Text(
                 text = "녹음이 진행될 때는 앱을 완전히 종료하지는 마세요.\n녹음이 저장되지 않을 수 있습니다.",
                 color = DarkGray600,

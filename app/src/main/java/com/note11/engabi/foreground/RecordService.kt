@@ -11,7 +11,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import com.note11.engabi.R
 import com.note11.engabi.util.GetFilesUtil
-import com.note11.engabi.util.RecordDestoryService
+import com.note11.engabi.util.RecordDestroyService
 import java.io.File
 import java.lang.Exception
 import java.text.SimpleDateFormat
@@ -72,13 +72,15 @@ class RecordService : Service() {
             nm.createNotificationChannel(channel)
         val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
 
-        val intent = Intent(applicationContext, RecordDestoryService::class.java)
-        intent.setAction("Close")
-        val pending = PendingIntent.getService(applicationContext, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+        val intent = Intent(applicationContext, RecordDestroyService::class.java)
+        intent.action = "Close"
+        val pending =
+            PendingIntent.getService(applicationContext, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         builder.setSmallIcon(R.mipmap.ic_launcher)
             .setContentText("녹음중입니다.")
             .addAction(0, "종료", pending)
+            .priority = NotificationCompat.PRIORITY_LOW
 
         startForeground(1, builder.build())
     }
@@ -99,9 +101,9 @@ class RecordService : Service() {
         stopForeground(true)
         isRunnable = false
         instance = null
-        
+
         Log.i("MediaRecorder", "녹음 서비스 종료")
-        for(file in GetFilesUtil.getFiles(applicationContext)) {
+        for (file in GetFilesUtil.getFiles(applicationContext)) {
             Log.i("MediaRecorder", file.name)
         }
     }
@@ -136,11 +138,11 @@ class RecordService : Service() {
 
         //파일 경로 확인용
         Log.i("MediaRecorder", "저장 : $filePath")
-        Toast.makeText(applicationContext, "저장되었습니다.", Toast.LENGTH_SHORT)
+        Toast.makeText(applicationContext, "저장되었습니다.", Toast.LENGTH_SHORT).show()
         mediaRecorder = null
     }
 
-    public fun destroy() {
+    fun destroy() {
         stopSelf()
     }
 }
