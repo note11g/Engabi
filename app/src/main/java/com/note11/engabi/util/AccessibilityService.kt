@@ -1,32 +1,39 @@
 package com.note11.engabi.util
 
+import android.Manifest
 import android.accessibilityservice.AccessibilityService
+import android.os.Build
 import android.util.Log
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import android.widget.Toast
+import com.gun0912.tedpermission.coroutine.TedPermission
 import com.note11.engabi.foreground.RecordService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.Executors
 
 class AccessibilityService : AccessibilityService() {
     var es = Executors.newFixedThreadPool(1)
-    private val macroSystem : MacroSystem = MacroSystem()
+    private val macroSystem: MacroSystem = MacroSystem()
 
     companion object {
         const val LONG_PRESS_TIME: Long = 500
     }
 
-    var instance : AccessibilityService? = null
+    var instance: AccessibilityService? = null
 
     override fun onCreate() {
         super.onCreate()
 
-        if(instance == null) {
+        if (instance == null) {
             instance = this
 
             macroSystem.addKeyCode(KeyEvent.KEYCODE_VOLUME_DOWN)
             macroSystem.addKeyCode(KeyEvent.KEYCODE_VOLUME_UP)
-        }else {
+        } else {
             stopSelf()
         }
     }
@@ -34,14 +41,14 @@ class AccessibilityService : AccessibilityService() {
     override fun onKeyEvent(event: KeyEvent): Boolean {
         val result = super.onKeyEvent(event)
 
-        val keyData : KeyData? = macroSystem.searchKeyCode(event.keyCode)
+        val keyData: KeyData? = macroSystem.searchKeyCode(event.keyCode)
         Log.d("KeyEvent", "${(keyData == null)} ${event.keyCode}")
-        if(keyData == null) return result
+        if (keyData == null) return result
 
         keyData.isClickNow = event.action == KeyEvent.ACTION_DOWN
         keyData.clickTime = Date().time
 
-        if(!macroSystem.isWorkerRunnable) macroSystem.startWorker()
+        if (!macroSystem.isWorkerRunnable) macroSystem.startWorker()
 
         return result
     }
@@ -58,7 +65,7 @@ class AccessibilityService : AccessibilityService() {
         var isWorkerRunnable: Boolean = false
 
         fun addKeyCode(key: Int): MacroSystem {
-            if(searchKeyCode(key) != null) return this
+            if (searchKeyCode(key) != null) return this
 
             val keyData = KeyData()
             keyData.keyCode = key
@@ -74,7 +81,7 @@ class AccessibilityService : AccessibilityService() {
             return null
         }
 
-        fun isAllChecked() : Boolean {
+        fun isAllChecked(): Boolean {
             for (keyData in keyCode) {
                 if (!keyData.isClickNow) return false
             }
@@ -82,7 +89,7 @@ class AccessibilityService : AccessibilityService() {
             return true
         }
 
-        fun isAllLongChecked() : Boolean {
+        fun isAllLongChecked(): Boolean {
             for (keyData in keyCode) {
                 if (!(keyData.isClickNow && Date().time - keyData.clickTime >= LONG_PRESS_TIME)) return false
             }
@@ -91,8 +98,8 @@ class AccessibilityService : AccessibilityService() {
         }
 
         fun isAllNotChecked(): Boolean {
-            for(keyData in keyCode) {
-                if(keyData.isClickNow) return false
+            for (keyData in keyCode) {
+                if (keyData.isClickNow) return false
             }
 
             return true
@@ -103,8 +110,36 @@ class AccessibilityService : AccessibilityService() {
         }
 
         fun start() {
-            if(RecordService.isRunnable) RecordService.instance?.stopSelf()
-            else ForegroundServiceUtils.runForegroundService(applicationContext, ForegroundServiceUtils.ForegroundServiceType.SOUND_RECORD_SERVICE)
+            if (RecordService.isRunnable) {
+                RecordService.instance?.stopSelf()
+            } else {
+                CoroutineScope(Dispatchers.Main).launch {
+                    val permissionResult =
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            TedPermission.create()
+                                .setPermissions(
+                                    Manifest.permission.RECORD_AUDIO,
+                                    Manifest.permission.FOREGROUND_SERVICE
+                                )
+                                .check()
+                        } else {
+                            TedPermission.create()
+                                .setPermissions(
+                                    Manifest.permission.RECORD_AUDIO
+                                )
+                                .check()
+                        }
+                    if (permissionResult.isGranted) {
+                        ForegroundServiceUtils.runForegroundService(
+                            applicationContext,
+                            ForegroundServiceUtils.ForegroundServiceType.SOUND_RECORD_SERVICE
+                        )
+                    } else {
+                        Toast.makeText(applicationContext, "권한을 모두 허용해주세요", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                }
+            }
         }
     }
 
@@ -125,7 +160,7 @@ class AccessibilityService : AccessibilityService() {
                         timer.cancel()
                     }
 
-                    if(macroSystem.isAllNotChecked()) {
+                    if (macroSystem.isAllNotChecked()) {
                         macroSystem.isWorkerRunnable = false
                         timer.cancel()
                     }

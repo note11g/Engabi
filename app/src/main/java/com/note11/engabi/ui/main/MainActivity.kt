@@ -54,6 +54,8 @@ import com.note11.engabi.ui.theme.*
 import com.note11.engabi.ui.util.CustomBottomDrawer
 import com.note11.engabi.ui.video.VideoActivity
 import com.note11.engabi.util.ForegroundServiceUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
@@ -456,7 +458,11 @@ class MainActivity : ComponentActivity() {
                         DarkRedRecording
                     )
                     .fillMaxWidth()
-                    .clickable { startRecording() }
+                    .clickable {
+                        coroutineScope.launch {
+                            startRecording()
+                        }
+                    }
                     .padding(vertical = 16.dp))
 //28,38
             Text(
@@ -469,7 +475,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @ExperimentalMaterialApi
-    private fun startRecording() = lifecycleScope.launch {
+    private suspend fun startRecording() {
         val permissionResult =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 TedPermission.create()
@@ -486,11 +492,11 @@ class MainActivity : ComponentActivity() {
                     .check()
             }
         if (permissionResult.isGranted) {
+            drawerState.close()
             ForegroundServiceUtils.runForegroundService(
                 applicationContext,
                 ForegroundServiceUtils.ForegroundServiceType.SOUND_RECORD_SERVICE
             )
-            drawerState.close()
             goHome()
         } else {
             Toast.makeText(this@MainActivity, "권한을 모두 허용해주세요", Toast.LENGTH_SHORT)
