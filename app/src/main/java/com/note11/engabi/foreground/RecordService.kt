@@ -35,12 +35,11 @@ class RecordService : Service() {
         instance = this
 
         //Foreground Notification 띄우기
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService()
-        else startForeground(1, Notification())
-
-        //음성 기록 파일 생성(테스트용)
-//        var file = File(applicationContext.getExternalFilesDir(null), "${UUID.randomUUID()}.mp3")
+        } else {
+            startForeground(1, Notification())
+        }
 
         val file = File(
             applicationContext.filesDir,
@@ -80,7 +79,6 @@ class RecordService : Service() {
         builder.setSmallIcon(R.mipmap.ic_launcher)
             .setContentText("녹음중입니다.")
             .addAction(0, "종료", pending)
-            .priority = NotificationCompat.PRIORITY_LOW
 
         startForeground(1, builder.build())
     }
@@ -116,19 +114,23 @@ class RecordService : Service() {
         }
 
         //음성 세팅
-        mediaRecorder = MediaRecorder()
-        mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT)
-//        mediaRecorder?.setVideoEncodingBitRate(0)
-//        mediaRecorder?.setAudioEncodingBitRate(25000)
+        mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(applicationContext)
+        } else {
+            MediaRecorder()
+        }
 
-        //음성 기록 파일 세팅
-        mediaRecorder?.setOutputFile(filePath)
+        mediaRecorder?.run {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT)
 
-        //음성 녹음 시작
-        mediaRecorder?.prepare()
-        mediaRecorder?.start()
+            // setAudioEncodingBitRate(25000)
+
+            setOutputFile(filePath) //음성 기록 파일 세팅
+            prepare()
+            start()
+        }
     }
 
     private fun recordStop() {

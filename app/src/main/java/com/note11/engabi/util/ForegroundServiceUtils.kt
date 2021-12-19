@@ -6,36 +6,35 @@ import android.os.Build
 import com.note11.engabi.foreground.RecordService
 import java.io.File
 
-class ForegroundServiceUtils {
-    companion object {
-        fun runForegroundService(context: Context, type : ForegroundServiceType) {
-            val target = when(type) {
-                ForegroundServiceType.SOUND_RECORD_SERVICE -> RecordService::class.java
-                else -> null
-            } ?: return
+object ForegroundServiceUtils {
+    fun runForegroundService(context: Context, type: ForegroundServiceType) {
+        val target = when (type) {
+            ForegroundServiceType.SOUND_RECORD_SERVICE -> RecordService::class.java
+            else -> null
+        } ?: return
 
-            val intent = Intent(context, target)
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                context.startForegroundService(intent)
-            else
-                context.startService(intent)
+        val intent = Intent(context, target)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            context.startForegroundService(intent)
+        else
+            context.startService(intent)
+    }
+
+    fun getAudioFiles(context: Context): ArrayList<File> {
+        val fileFolder = context.getExternalFilesDir(null)
+        val lists = ArrayList<File>()
+        if (fileFolder == null) return lists
+
+        for (file in fileFolder.listFiles()!!) {
+            if (file.isDirectory || !file.name.lowercase().endsWith(".mp3")) continue
+            lists.add(file)
         }
 
-        fun getAudioFiles(context: Context) : ArrayList<File> {
-            val fileFolder = context.getExternalFilesDir(null)
-            val lists = ArrayList<File>()
-            if(fileFolder == null) return lists
-
-            for(file in fileFolder.listFiles()!!) {
-                if(file.isDirectory || !file.name.lowercase().endsWith(".mp3")) continue
-                lists.add(file)
-            }
-
-            return lists
-        }
+        return lists
     }
 
     enum class ForegroundServiceType {
         STT_SERVICE, SOUND_RECORD_SERVICE
     }
 }
+
