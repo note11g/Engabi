@@ -15,7 +15,7 @@ class GetFilesUtil {
 
         fun getFileFromPath(path: String) = File(path)
 
-        fun playAudioIntent(context: Context, file: File) : MediaPlayer {
+        fun playAudioIntent(context: Context, file: File) {
             val intent = Intent()
             intent.action = Intent.ACTION_VIEW
             intent.setDataAndType(Uri.fromFile(file), "audio/*")
