@@ -7,7 +7,7 @@ import androidx.core.content.FileProvider
 import java.io.File
 
 object GetFilesUtil {
-    fun getFiles(context: Context) = File(context.filesDir.absolutePath).listFiles()
+    fun getFiles(context: Context) : Array<File> = File(context.filesDir.absolutePath).listFiles()
 
     fun getFileFromPath(path: String) = File(path)
 
