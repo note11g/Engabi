@@ -3,34 +3,30 @@ package com.note11.engabi.ui.video
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.params.OutputConfiguration
+import android.hardware.camera2.params.SessionConfiguration
 import android.media.MediaCodec
 import android.media.MediaRecorder
 import android.media.MediaScannerConnection
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
-import android.util.Size
-import android.view.MotionEvent
-import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.SurfaceView
+import android.util.Range
+import android.view.*
 import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
@@ -46,8 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -57,10 +52,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.gms.common.util.concurrent.HandlerExecutor
+import com.note11.engabi.BuildConfig
 import com.note11.engabi.R
 import com.note11.engabi.model.native.CameraModel
 import com.note11.engabi.model.native.Lens
@@ -85,40 +83,23 @@ class VideoActivity : ComponentActivity() {
 
     private val outputFile by lazy { createFile(applicationContext, "mp4") }
 
-    private val camIdMap: Map<String, CameraModel> by lazy { //todo : change this => lens facing state
+    private val camIdMap: Map<String, CameraModel> by lazy {
         val camMap = mutableMapOf<String, CameraModel>()
 
         for (cam in CameraUtil.getVideoCameras(cameraManager)) {
-            if (camMap[cam.cameraId] == null) {
-                camMap[cam.cameraId] = cam
-            } else if (camMap[cam.cameraId]!!.size.width * camMap[cam.cameraId]!!.size.height < cam.size.width * cam.size.height) {
-                camMap[cam.cameraId] = cam
+            if (camMap[cam.cameraId] == null || camMap[cam.cameraId]!!.size.width * camMap[cam.cameraId]!!.size.height < cam.size.width * cam.size.height) {
+                camMap[cam.cameraId] = cam.getMaxSizeModel()
             }
         }
 
+        Log.d(TAG, camMap.toString())
+
         camMap
     }
+    private val camIdState = MutableStateFlow("0")
 
-    private val camIdState by lazy { MutableStateFlow("0") }
-
-    private val initCameraModel: CameraModel by lazy {
-        lateinit var normalCam: CameraModel
-
-        for (cam in camIdMap) {
-            normalCam = cam.value
-            break
-        }
-
-        camIdState.value = normalCam.cameraId
-        normalCam
-    }
-
-    private val recorder: MediaRecorder by lazy {
-        createRecorder(
-            initCameraModel,
-            recorderSurface
-        )
-    } //todo 매번 생성해야할 듯
+    private lateinit var recorder: MediaRecorder
+    private lateinit var recorderSurface: Surface
 
     private lateinit var camera: CameraDevice
 
@@ -127,16 +108,11 @@ class VideoActivity : ComponentActivity() {
 
     private lateinit var session: CameraCaptureSession
 
-    private val recorderSurface: Surface by lazy {
-        val surface = MediaCodec.createPersistentInputSurface()
-        createRecorder(initCameraModel, surface).apply {
-            prepare()
-            release()
-        }
-        surface
-    }
+    private lateinit var recordRequest: CaptureRequest
 
     private lateinit var lateSurfaceView: AutoFitSurfaceView
+
+    private val recordingState = MutableStateFlow(false)
 
     private fun previewRequest(surfaceView: SurfaceView): CaptureRequest {
         return session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
@@ -147,9 +123,14 @@ class VideoActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        hideSystemBars()
+        createRecorderSurface()
+
         setContent {
             EngabiTheme {
                 Surface(color = Color.Black) {
+                    val isRecord = recordingState.collectAsState()
+
                     ConstraintLayout(modifier = Modifier.fillMaxSize()) {
                         val (cam, nav, backBtn, guideText, wideBtn) = createRefs()
 
@@ -163,37 +144,47 @@ class VideoActivity : ComponentActivity() {
                             height = Dimension.fillToConstraints
                         })
 
-                        IconButton(
-                            onClick = { },
-                            modifier = Modifier
-                                .constrainAs(wideBtn) {
-                                    bottom.linkTo(nav.top, margin = 20.dp)
-                                    end.linkTo(parent.end, margin = 20.dp)
-                                }
-                                .clip(
-                                    CircleShape
+                        val camIdFlowAsState = camIdState.collectAsState()
+
+                        if (camIdMap[camIdFlowAsState.value]!!.lensFacing == Lens.BACK && camIdMap.size > 2)
+                            IconButton(
+                                onClick = { changeLensWideOrNormal() },
+                                modifier = Modifier
+                                    .constrainAs(wideBtn) {
+                                        bottom.linkTo(nav.top, margin = 20.dp)
+                                        end.linkTo(parent.end, margin = 20.dp)
+                                    }
+                                    .clip(
+                                        CircleShape
+                                    )
+                                    .background(Color(0x47000000))
+                                    .size(40.dp)
+                            ) {
+                                if (camIdMap[camIdFlowAsState.value]!!.fov == null || camIdMap[camIdFlowAsState.value]!!.fov!! < 1.5)
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_camera_change_wide),
+                                        contentDescription = "더 넓게 찍기",
+                                        tint = Color.White
+                                    )
+                                else Icon(
+                                    painter = painterResource(id = R.drawable.ic_camera_change_normal),
+                                    contentDescription = "일반 모드로 찍기",
+                                    tint = Color.White
                                 )
-                                .background(Color(0x47000000))
-                                .size(40.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_camera_change_wide),
-                                contentDescription = "더 넓게 찍기",
-                                tint = Color.White
-                            )
-                        }
+                            }
 
                         Row(
                             Modifier
                                 .constrainAs(nav) {
-                                    top.linkTo(cam.bottom)
                                     bottom.linkTo(parent.bottom)
-                                    start.linkTo(parent.start, margin = 24.dp)
-                                    end.linkTo(parent.end, margin = 24.dp)
+                                    start.linkTo(parent.start)
+                                    end.linkTo(parent.end)
 
                                     width = Dimension.fillToConstraints
                                     height = Dimension.value(96.dp)
-                                },
+                                }
+                                .background(Color.Black)
+                                .padding(horizontal = 24.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(
@@ -215,22 +206,23 @@ class VideoActivity : ComponentActivity() {
                                 )
                             }
 
-                            Surface(
+                            if (isRecord.value.not())
+                                Surface(
+                                    shape = CircleShape,
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .clickable { startRecording() }
+                                        .size(60.dp),
+                                    color = (Color(0xFFB44B46)),
+                                    border = BorderStroke(2.dp, color = Color.White)
+                                ) {}
+                            else Surface(
                                 shape = CircleShape,
                                 modifier = Modifier
                                     .clip(CircleShape)
-                                    .clickable {
-                                        Toast
-                                            .makeText(
-                                                this@VideoActivity,
-                                                "녹화 기능은 버그로 인해 차후 지원 예정입니다. (cameraX의 호환성 문제로 Camera2로 마이그레이션 예정)",
-//                                                "녹화를 시작합니다.\n종료하려면 화면을 빠르게 두번 터치하세요.",
-                                                Toast.LENGTH_LONG
-                                            )
-                                            .show()
-                                    }
+                                    .clickable { stopRecording() }
                                     .size(60.dp),
-                                color = (Color(0xFFB44B46)),
+                                color = (Color(0xFF4655B4)),
                                 border = BorderStroke(2.dp, color = Color.White)
                             ) {}
 
@@ -272,7 +264,7 @@ class VideoActivity : ComponentActivity() {
                                 fontFamily = spoqaFamily,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Center,
-                                fontSize = 15.sp,
+                                fontSize = 14.sp,
                                 color = Color.White,
                                 shadow = Shadow(
                                     color = Color.Black, blurRadius = 6f,
@@ -288,12 +280,20 @@ class VideoActivity : ComponentActivity() {
                                 }
                         )
                     }
+
+                    if (isRecord.value) Surface(
+                        Modifier
+                            .background(Color.Black)
+                            .pointerInput(Unit) {
+                                detectTapGestures(onDoubleTap = { stopRecording() })
+                            }
+                            .fillMaxSize()
+                    ) {}
                 }
 
             }
         }
     }
-
 
     @Composable
     fun Camera2Compose(modifier: Modifier = Modifier) {
@@ -304,8 +304,12 @@ class VideoActivity : ComponentActivity() {
             surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
                 override fun surfaceCreated(p0: SurfaceHolder) {
                     surfaceView.run {
-                        setAspectRatio(initCameraModel.size.width, initCameraModel.size.height)
-                        post { initializeCamera(this) }
+                        // todo : 만약, 팅기면 여기서 state를 관리해주어야함(flowAsState)
+                        setAspectRatio(
+                            camIdMap[camIdState.value]!!.size.width,
+                            camIdMap[camIdState.value]!!.size.height
+                        )
+                        post { initializeCamera() }
                     }
                 }
 
@@ -317,113 +321,120 @@ class VideoActivity : ComponentActivity() {
         }, modifier = modifier.fillMaxSize())
     }
 
-    private fun createRecorder(camera: CameraModel, surface: Surface) = MediaRecorder().apply {
-        setAudioSource(MediaRecorder.AudioSource.MIC)
-        setVideoSource(MediaRecorder.VideoSource.SURFACE)
-        setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        setOutputFile(outputFile.absolutePath)
-        setVideoEncodingBitRate(RECORDER_VIDEO_BITRATE)
-        if (camera.fps > 0) setVideoFrameRate(camera.fps)
-        setVideoSize(camera.size.width, camera.size.height)
-        setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-        setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-        setInputSurface(surface)
-    }
-
-    private fun initializeCamera(surfaceView: SurfaceView) =
-        lifecycleScope.launch(Dispatchers.Main) {
-            camera = openCamera(cameraManager, initCameraModel.cameraId, cameraHandler)
-            val targets = listOf(surfaceView.holder.surface, recorderSurface)
-            session = createCaptureSession(camera, targets, cameraHandler)
-            session.setRepeatingRequest(previewRequest(surfaceView), null, cameraHandler)
-
-            // React to user touching the capture button
-//        fragmentCameraBinding.captureButton.setOnTouchListener { view, event ->
-//            when (event.action) {
-//
-//                MotionEvent.ACTION_DOWN -> lifecycleScope.launch(Dispatchers.IO) {
-//
-//                    // Prevents screen rotation during the video recording
-//                    requireActivity().requestedOrientation =
-//                        ActivityInfo.SCREEN_ORIENTATION_LOCKED
-//
-//                    // Start recording repeating requests, which will stop the ongoing preview
-//                    //  repeating requests without having to explicitly call `session.stopRepeating`
-//                    session.setRepeatingRequest(recordRequest, null, cameraHandler)
-//
-//                    // Finalizes recorder setup and starts recording
-//                    recorder.apply {
-//                        // Sets output orientation based on current sensor value at start time
-//                        relativeOrientation.value?.let { setOrientationHint(it) }
-//                        prepare()
-//                        start()
-//                    }
-//                    recordingStartMillis = System.currentTimeMillis()
-//                    Log.d(TAG, "Recording started")
-//
-//                    // Starts recording animation
-//                    fragmentCameraBinding.overlay.post(animationTask)
-//                }
-//
-//                MotionEvent.ACTION_UP -> lifecycleScope.launch(Dispatchers.IO) {
-//
-//                    // Unlocks screen rotation after recording finished
-//                    requireActivity().requestedOrientation =
-//                        ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-//
-//                    // Requires recording of at least MIN_REQUIRED_RECORDING_TIME_MILLIS
-//                    val elapsedTimeMillis = System.currentTimeMillis() - recordingStartMillis
-//                    if (elapsedTimeMillis < MIN_REQUIRED_RECORDING_TIME_MILLIS) {
-//                        delay(MIN_REQUIRED_RECORDING_TIME_MILLIS - elapsedTimeMillis)
-//                    }
-//
-//                    Log.d(TAG, "Recording stopped. Output file: $outputFile")
-//                    recorder.stop()
-//
-//                    // Removes recording animation
-//                    fragmentCameraBinding.overlay.removeCallbacks(animationTask)
-//
-//                    // Broadcasts the media file to the rest of the system
-//                    MediaScannerConnection.scanFile(
-//                        view.context, arrayOf(outputFile.absolutePath), null, null)
-//
-//                    // Launch external activity via intent to play video recorded using our provider
-//                    startActivity(Intent().apply {
-//                        action = Intent.ACTION_VIEW
-//                        type = MimeTypeMap.getSingleton()
-//                            .getMimeTypeFromExtension(outputFile.extension)
-//                        val authority = "${BuildConfig.APPLICATION_ID}.provider"
-//                        data = FileProvider.getUriForFile(view.context, authority, outputFile)
-//                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-//                                Intent.FLAG_ACTIVITY_CLEAR_TOP
-//                    })
-//
-//                    // Finishes our current camera screen
-//                    delay(CameraActivity.ANIMATION_SLOW_MILLIS)
-//                    navController.popBackStack()
-//                }
-//            }
-
-//            true
-//        }
+    private fun createRecorder(camera: CameraModel, surface: Surface) =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(applicationContext)
+        } else {
+            MediaRecorder()
+        }.apply {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setVideoSource(MediaRecorder.VideoSource.SURFACE)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setOutputFile(outputFile.absolutePath)
+            setAudioSamplingRate(44100)
+            setAudioEncodingBitRate(96000)
+            setVideoEncodingBitRate(6_000_000)
+            if (camera.fps > 0) setVideoFrameRate(camera.fps)
+            setVideoSize(camera.size.width, camera.size.height)
+            setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setInputSurface(surface)
+            setOrientationHint(if (camera.lensFacing == Lens.BACK) 90 else 270)
         }
 
-    private suspend fun reopenCamera() {
-        camera.close()
+    private fun createRecorderSurface() {
+        recorderSurface = MediaCodec.createPersistentInputSurface()
+        createRecorder(camIdMap[camIdState.value]!!, recorderSurface).apply {
+            prepare()
+            release()
+        }
+    }
 
+    private fun startRecording() {
+        recorder = createRecorder(
+            camIdMap[camIdState.value]!!,
+            recorderSurface
+        )
+        lifecycleScope.launch(Dispatchers.IO) {
+            recordRequest = session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+                .apply {
+                    addTarget(lateSurfaceView.holder.surface)
+                    addTarget(recorderSurface)
+                    set(
+                        CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
+                        Range(camIdMap[camIdState.value]!!.fps, camIdMap[camIdState.value]!!.fps)
+                    )
+                }.build()
+
+            session.setRepeatingRequest(recordRequest, null, cameraHandler)
+
+            recorder.apply {
+                prepare()
+                start()
+            }
+
+            Log.d(TAG, "Recording started")
+
+            recordingState.value = true
+        }
+
+        Toast.makeText(this, "녹화를 시작합니다.\n종료하려면 화면을 빠르게 두번 터치하세요.", Toast.LENGTH_LONG).show()
+    }
+
+    private fun stopRecording() = lifecycleScope.launch(Dispatchers.IO) {
+        delay(500L)
+        recorder.stop()
+
+        recordingState.value = false
+
+        MediaScannerConnection.scanFile(
+            applicationContext, arrayOf(outputFile.absolutePath), null, null
+        )
+
+        startActivity(Intent().apply {
+            action = Intent.ACTION_VIEW
+            type = MimeTypeMap.getSingleton()
+                .getMimeTypeFromExtension(outputFile.extension)
+            val authority = "${BuildConfig.APPLICATION_ID}.provider"
+            data = FileProvider.getUriForFile(applicationContext, authority, outputFile)
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP
+        })
+    }
+
+    private fun initializeCamera() = lifecycleScope.launch(Dispatchers.Main) {
         camera = openCamera(cameraManager, camIdState.value, cameraHandler)
         val targets = listOf(lateSurfaceView.holder.surface, recorderSurface)
         session = createCaptureSession(camera, targets, cameraHandler)
         session.setRepeatingRequest(previewRequest(lateSurfaceView), null, cameraHandler)
     }
 
-    private fun getInitialLens(): Lens {
-        val list = CameraUtil.getVideoCameras(cameraManager)
-        list.forEach {
-            if (it.lensFacing == Lens.BACK) return Lens.BACK
-            else if (it.lensFacing == Lens.FRONT) return Lens.FRONT
+    override fun onStop() {
+        super.onStop()
+        try {
+            camera.close()
+        } catch (exc: Throwable) {
+            Log.e(TAG, "Error closing camera", exc)
         }
-        return Lens.BACK
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cameraThread.quitSafely()
+        recorderSurface.release()
+    }
+
+    private suspend fun reopenCamera() {
+        camera.close()
+        session.close()
+        recorderSurface.release()
+
+        createRecorderSurface()
+
+        camera = openCamera(cameraManager, camIdState.value, cameraHandler)
+        val targets = listOf(lateSurfaceView.holder.surface, recorderSurface)
+        session = createCaptureSession(camera, targets, cameraHandler)
+        session.setRepeatingRequest(previewRequest(lateSurfaceView), null, cameraHandler)
     }
 
     private fun changeLensFacing() {
@@ -440,20 +451,31 @@ class VideoActivity : ComponentActivity() {
                     break
                 }
             }
+
+            lifecycleScope.launch { reopenCamera() }
         }
+    }
 
+    private fun changeLensWideOrNormal() {
+        camIdMap[camIdState.value]?.let { nowCam ->
+            for (cam in camIdMap) {
+                if (cam.value.lensFacing == nowCam.lensFacing && nowCam.cameraId != cam.key) {
+                    camIdState.value = cam.key
+                    break
+                }
+            }
 
-        lifecycleScope.launch { reopenCamera() }
+            lifecycleScope.launch { reopenCamera() }
+        }
     }
 
     private suspend fun createCaptureSession(
         device: CameraDevice,
         targets: List<Surface>,
-        handler: Handler? = null
+        handler: Handler
     ): CameraCaptureSession = suspendCoroutine { cont ->
 
-        device.createCaptureSession(targets, object : CameraCaptureSession.StateCallback() {
-
+        val mCameraSessionListener = object : CameraCaptureSession.StateCallback() {
             override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
 
             override fun onConfigureFailed(session: CameraCaptureSession) {
@@ -461,7 +483,23 @@ class VideoActivity : ComponentActivity() {
                 Log.e(TAG, exc.message, exc)
                 cont.resumeWithException(exc)
             }
-        }, handler)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val outputConfigurationList = mutableListOf<OutputConfiguration>()
+            for (target in targets) outputConfigurationList.add(OutputConfiguration(target))
+
+            val sessionConfiguration = SessionConfiguration(
+                SessionConfiguration.SESSION_REGULAR,
+                outputConfigurationList,
+                HandlerExecutor(handler.looper),
+                mCameraSessionListener
+            )
+
+            device.createCaptureSession(sessionConfiguration)
+        } else {
+            device.createCaptureSession(targets, mCameraSessionListener, handler)
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -494,9 +532,21 @@ class VideoActivity : ComponentActivity() {
         }, handler)
     }
 
-    companion object {
-        private const val RECORDER_VIDEO_BITRATE: Int = 10_000_000
+    private fun hideSystemBars() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowInsetsController =
+                ViewCompat.getWindowInsetsController(window.decorView) ?: return
+            windowInsetsController.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        } else {
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        }
+    }
 
+    companion object {
         private val TAG = VideoActivity::class.java.simpleName
 
         private fun createFile(context: Context, extension: String): File {

@@ -163,7 +163,7 @@ class MainActivity : ComponentActivity() {
                 lifecycleScope.launch {
                     val permissionResult =
                         TedPermission.create()
-                            .setPermissions(Manifest.permission.CAMERA)
+                            .setPermissions(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
                             .check()
                     if (permissionResult.isGranted) {
                         startActivity(

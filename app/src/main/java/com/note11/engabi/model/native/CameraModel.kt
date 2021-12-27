@@ -6,20 +6,20 @@ data class CameraModel(
     val cameraId: String,
     val size: Size,
     val fps: Int,
-    val lensFacing: Lens
+    val lensFacing: Lens,
+    val fov: Float?
 ) {
     override fun toString(): String =
-        "$lensFacing ($cameraId), ${size.width}x${size.height}, ${fps}fps"
+        "$lensFacing ($cameraId), ${size.width}x${size.height}, ${fps}fps, fov: $fov"
 
-    fun getMaxSize(): Size {
-        for (it in listOf(2160, 1080, 720)) {
+    private fun getMaxSize(): Size {
+        for (it in listOf(1080, 720)) {
             if (size.height >= it) return Size(it / 9 * 16, it)
         }
         return Size(720, 480)
     }
 
-    fun getMaxSizeModel(): CameraModel =
-        CameraModel(cameraId, getMaxSize(), fps, lensFacing)
+    fun getMaxSizeModel(): CameraModel = CameraModel(cameraId, getMaxSize(), fps, lensFacing, fov)
 }
 
 enum class Lens {

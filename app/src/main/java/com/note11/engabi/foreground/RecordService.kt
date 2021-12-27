@@ -127,8 +127,10 @@ class RecordService : Service() {
         mediaRecorder?.run {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT)
-            setOutputFile(filePath) //음성 기록 파일 세팅
+            setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC)
+            setAudioSamplingRate(44100)
+            setAudioEncodingBitRate(96000)
+            setOutputFile(filePath)
 
             //음성 녹음 시작
             prepare()
@@ -137,9 +139,10 @@ class RecordService : Service() {
     }
 
     private fun recordStop() {
-        //음성 녹음 중지
-        mediaRecorder?.stop()
-        mediaRecorder?.release()
+        mediaRecorder?.apply {
+            stop()
+            release()
+        }
 
         //파일 경로 확인용
         Log.i("MediaRecorder", "저장 : $filePath")

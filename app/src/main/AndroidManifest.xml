@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.note11.engabi">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -24,14 +25,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Engabi">
         <provider
-            android:authorities="${applicationId}.provider"
             android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths"/>
+                android:resource="@xml/file_paths" />
         </provider>
+
         <service
             android:name=".util.RecordDestroyService"
             android:enabled="true"
@@ -57,7 +59,9 @@
             android:name=".ui.splash.SplashActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Engabi.NoActionBar">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Engabi.NoActionBar"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -68,26 +72,36 @@
             android:name=".ui.main.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Engabi.NoActionBar" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Engabi.NoActionBar"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ui.login.LoginActivity"
             android:exported="true"
-            android:theme="@style/Theme.Engabi.NoActionBar" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Engabi.NoActionBar"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ui.register.Register1Activity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Engabi.NoActionBar"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ui.register.Register2Activity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Engabi.NoActionBar"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ui.register.Register3Activity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Engabi.NoActionBar"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
             android:exported="true">
@@ -105,15 +119,21 @@
         <activity
             android:name=".ui.video.VideoActivity"
             android:exported="false"
-            android:theme="@style/Theme.Engabi.NoActionBar" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Engabi.NoActionBar"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ui.community.CommunityMainActivity"
             android:exported="false"
-            android:theme="@style/Theme.Engabi.NoActionBar" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Engabi.NoActionBar"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".ui.secretbox.SecretboxActivity"
             android:exported="false"
-            android:theme="@style/Theme.Engabi.NoActionBar" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Engabi.NoActionBar"
+            tools:ignore="LockedOrientationActivity" />
     </application>
 
 </manifest>
