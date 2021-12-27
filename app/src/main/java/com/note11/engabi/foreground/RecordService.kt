@@ -14,6 +14,7 @@ import com.note11.engabi.util.GetFilesUtil
 import com.note11.engabi.util.RecordDestroyService
 import java.io.File
 import java.lang.Exception
+import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -116,19 +117,23 @@ class RecordService : Service() {
         }
 
         //음성 세팅
-        mediaRecorder = MediaRecorder()
-        mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT)
-//        mediaRecorder?.setVideoEncodingBitRate(0)
-//        mediaRecorder?.setAudioEncodingBitRate(25000)
+        mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(applicationContext)
+        } else {
+            MediaRecorder()
+        }
 
-        //음성 기록 파일 세팅
-        mediaRecorder?.setOutputFile(filePath)
 
-        //음성 녹음 시작
-        mediaRecorder?.prepare()
-        mediaRecorder?.start()
+        mediaRecorder?.run {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT)
+            setOutputFile(filePath) //음성 기록 파일 세팅
+
+            //음성 녹음 시작
+            prepare()
+            start()
+        }
     }
 
     private fun recordStop() {
@@ -139,6 +144,10 @@ class RecordService : Service() {
         //파일 경로 확인용
         Log.i("MediaRecorder", "저장 : $filePath")
         Toast.makeText(applicationContext, "저장되었습니다.", Toast.LENGTH_SHORT).show()
+
+        //TODO: remove this(test)
+        GetFilesUtil.playAudioIntent(applicationContext, File(filePath))
+
         mediaRecorder = null
     }
 

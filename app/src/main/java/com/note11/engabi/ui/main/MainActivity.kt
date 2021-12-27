@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
     @ExperimentalMaterialApi
     private lateinit var drawerState: BottomDrawerState
 
-    @ExperimentalMaterialApi
+    @OptIn(ExperimentalMaterialApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {

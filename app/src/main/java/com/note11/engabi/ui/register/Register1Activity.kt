@@ -62,7 +62,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 class Register1Activity : ComponentActivity() {
-    @ExperimentalComposeUiApi
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

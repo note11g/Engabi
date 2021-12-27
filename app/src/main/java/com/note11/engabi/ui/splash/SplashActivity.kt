@@ -79,13 +79,13 @@ class SplashActivity : ComponentActivity() {
                 }
             }
         } else {
-            if (!checkAccessibilityPermissions()) {
+            if (false && !checkAccessibilityPermissions()) { //todo : delete false on release
                 AccAlertDialog {
                     startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                     Toast.makeText(
                         applicationContext,
                         "설치된 서비스에서 은가비를 선택하여 접근성 설정을 허용해주세요.",
-                        Toast.LENGTH_LONG
+                        Toast.LENGTH_SHORT
                     ).show()
                 }
             } else {

@@ -53,7 +53,8 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 class SecretboxActivity : ComponentActivity() {
-    @ExperimentalPagerApi
+
+    @OptIn(ExperimentalPagerApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
