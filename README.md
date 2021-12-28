@@ -6,7 +6,7 @@
 1. 압축 파일 내에 Engabi/app/build/outputs/apk/debug/app-debug.apk파일을 실행하거나, 
 같은 파일인 https://github.com/note11g/Engabi/releases/download/alpha/app-debug.apk 를 다운받습니다.
 
-2. 안드로이드 스마트폰 (Android 7.0이상, 안드로이드 10~11 권장)에 해당 apk파일을 넣고, 설치합니다.
+2. 안드로이드 스마트폰 (Android 7.0이상, 안드로이드 11 권장)에 해당 apk파일을 넣고, 설치합니다.
 
 3. 이후 설치 된 앱을 실행하면 접근성 권한 허용 다이얼로그가 뜹니다. 권한 허용하러 가기 버튼을 누르면 접근성 설정으로 이동합니다.
 ![3번 이미지](https://s3.us-west-2.amazonaws.com/secure.notion-static.com/39c417e5-2c41-4fc7-8d0d-a0a7b95ee6a3/Untitled.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20211119%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20211119T152627Z&X-Amz-Expires=86400&X-Amz-Signature=96e8e6ec76b7825506b46da5654fb4fbd7efc6cdc85820cf33b2eaf762ede3b3&X-Amz-SignedHeaders=host&response-content-disposition=filename%20%3D%22Untitled.png%22&x-id=GetObject "3번 이미지")
