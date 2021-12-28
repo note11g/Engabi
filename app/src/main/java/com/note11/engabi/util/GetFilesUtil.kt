@@ -12,6 +12,16 @@ import java.util.*
 object GetFilesUtil {
     fun getFiles(context: Context) : Array<File> = File(context.filesDir.absolutePath).listFiles()
 
+    fun getVideoFiles(context: Context) : List<File> {
+        val extensions = Arrays.asList("mp4")
+        return getFiles(context).filter { file -> extensions.contains(file.extension) }
+    }
+
+    fun getAudioFiles(context: Context) : List<File> {
+        val extensions = Arrays.asList("mp3")
+        return getFiles(context).filter { file -> extensions.contains(file.extension) }
+    }
+
     fun getFileFromPath(path: String) = File(path)
 
     /**
