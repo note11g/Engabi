@@ -116,12 +116,13 @@ class SplashActivity : ComponentActivity() {
                     modifier = Modifier
                         .padding(8.dp)
                 ) {
-                    Text(text = "권한 허용하러 가기", letterSpacing = 0.sp)
+                    Text(text = "권한 허용하러 가기", letterSpacing = 0.sp, color = White)
                 }
             },
             title = {
                 Text(
                     text = "권한이 필요해요",
+                    color = White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.sp
@@ -131,9 +132,9 @@ class SplashActivity : ComponentActivity() {
                 Text(
                     text = "은가비에서는 볼륨 버튼 두개를 5초간 동시에 누르면 녹음을 바로 시작하는 기능이 있어요.\n해당 기능을 위해서는 접근성 권한이 필요해요.",
                     letterSpacing = 0.sp,
-                    color = LightGray400
+                    color = Gray300
                 )
-            }, backgroundColor = PureWhite
+            }, backgroundColor = Blue600
         )
     }
 
@@ -147,12 +148,13 @@ class SplashActivity : ComponentActivity() {
                     modifier = Modifier
                         .padding(8.dp)
                 ) {
-                    Text(text = "권한 허용하러 가기", letterSpacing = 0.sp)
+                    Text(text = "권한 허용하러 가기", letterSpacing = 0.sp, color = White)
                 }
             },
             title = {
                 Text(
                     text = "권한이 필요해요",
+                    color = White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 0.sp
@@ -162,9 +164,9 @@ class SplashActivity : ComponentActivity() {
                 Text(
                     text = "은가비에서는 볼륨 버튼 두개를 5초간 동시에 누르면 녹음을 바로 시작하는 기능이 있어요.\n해당 기능을 위해서는 배터리 최적화 제외 권한이 필요해요.",
                     letterSpacing = 0.sp,
-                    color = LightGray400
+                    color = Gray300
                 )
-            }, backgroundColor = PureWhite
+            }, backgroundColor = Blue600
         )
     }
 

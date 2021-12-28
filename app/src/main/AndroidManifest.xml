@@ -24,6 +24,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Engabi">
+        <activity
+            android:name=".ui.more.ChangeActivity"
+            android:exported="false"
+            android:label="@string/title_activity_change"
+            android:theme="@style/Theme.Engabi.NoActionBar" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

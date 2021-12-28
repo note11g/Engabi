@@ -6,27 +6,17 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,11 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -49,9 +41,12 @@ import com.gun0912.tedpermission.coroutine.TedPermission
 import com.note11.engabi.R
 import com.note11.engabi.ui.community.CommunityMainActivity
 import com.note11.engabi.ui.login.LoginActivity
+import com.note11.engabi.ui.more.ChangeActivity
 import com.note11.engabi.ui.secretbox.SecretboxActivity
 import com.note11.engabi.ui.theme.*
 import com.note11.engabi.ui.util.CustomBottomDrawer
+import com.note11.engabi.ui.util.CustomBottomSheetLayout
+import com.note11.engabi.ui.util.CustomBottomSheetScaffold
 import com.note11.engabi.ui.video.VideoActivity
 import com.note11.engabi.util.ForegroundServiceUtils
 import kotlinx.coroutines.CoroutineScope
@@ -63,18 +58,27 @@ class MainActivity : ComponentActivity() {
     private val viewModel by viewModels<MainViewModel>()
 
     @ExperimentalMaterialApi
-    private lateinit var drawerState: BottomDrawerState
+    private lateinit var sheetState: ModalBottomSheetState
+
+    private val nowSheetState = mutableStateOf<Sheet?>(null)
+
+    enum class Sheet { RECORD, MORE }
 
     @OptIn(ExperimentalMaterialApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             EngabiTheme {
-                drawerState = rememberBottomDrawerState(initialValue = BottomDrawerValue.Closed)
+                sheetState =
+                    rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
 
-                CustomBottomDrawer(
-                    drawerState = drawerState,
-                    drawerContent = { VoiceRecordBottomDrawer() }) {
+                CustomBottomSheetLayout(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomSheetState = sheetState,
+                    sheetContent = {
+                        BottomSheet(nowSheetState.value)
+                    }
+                ) {
                     Scaffold {
                         LazyColumn(
                             contentPadding = PaddingValues(
@@ -92,27 +96,32 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @ExperimentalMaterialApi
     @Composable
     private fun HeaderSection() {
+        val coroutineScope = rememberCoroutineScope()
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
+            Icon(
                 painter = painterResource(id = R.drawable.ic_logo),
                 contentDescription = "로고",
-                modifier = Modifier.height(32.dp)
+                modifier = Modifier.height(32.dp),
+                tint = White
             )
             Icon(
                 Icons.Filled.MoreVert,
                 contentDescription = "더보기",
                 modifier = Modifier
+                    .clip(Shapes.medium)
                     .clickable {
-
+                        nowSheetState.value = Sheet.MORE
+                        coroutineScope.launch { sheetState.show() }
                     }
-                    .size(32.dp)
-                    .padding(4.dp)
+                    .size(40.dp)
+                    .padding(6.dp)
                     .rotate(90.0f)
             )
         }
@@ -121,7 +130,6 @@ class MainActivity : ComponentActivity() {
     @ExperimentalMaterialApi
     @Composable
     private fun ContentSection() {
-        val lockState = remember { mutableStateOf(true) }
         val coroutineScope = rememberCoroutineScope()
 
         ConstraintLayout(Modifier.fillMaxWidth()) {
@@ -138,12 +146,11 @@ class MainActivity : ComponentActivity() {
                 },
                 title = "녹음",
                 subTitle = "상황을 음성으로 기록해요",
-                painterId = R.drawable.home_voice_rec,
+                painterId = R.drawable.ic_home_voice_rec,
                 iconHeight = 113.dp
             ) {
-                coroutineScope.launch {
-                    drawerState.open()
-                }
+                nowSheetState.value = Sheet.RECORD
+                coroutineScope.launch { sheetState.show() }
             }
 
             GoBtnType1(
@@ -157,13 +164,16 @@ class MainActivity : ComponentActivity() {
                 },
                 title = "동영상 촬영",
                 subTitle = "상황을 영상으로 촬영해요",
-                painterId = R.drawable.home_video_rec,
+                painterId = R.drawable.ic_home_video_rec,
                 iconHeight = 81.dp
             ) {
                 lifecycleScope.launch {
                     val permissionResult =
                         TedPermission.create()
-                            .setPermissions(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+                            .setPermissions(
+                                Manifest.permission.CAMERA,
+                                Manifest.permission.RECORD_AUDIO
+                            )
                             .check()
                     if (permissionResult.isGranted) {
                         startActivity(
@@ -182,25 +192,16 @@ class MainActivity : ComponentActivity() {
 
         Spacer(Modifier.size(8.dp))
 
-        if (lockState.value) ListBox("비밀 창고", onClick = {
-            startActivity(Intent(this, SecretboxActivity::class.java))
-//            lockState.value = false
-        }) { onClick ->
-            ListBoxBlurItem(onClick)
-        }
-        else ListBox("비밀 창고", onClick = {
-//            lockState.value = true
-            startActivity(Intent(this, SecretboxActivity::class.java))
-        }) {
-            Column {
-                for (i in 1..3) {
-                    ListBoxItem(
-                        "REC_211110_${4 - i}",
-                        if (i % 2 == 0) "녹음파일" else "동영상파일",
-                        "${17 - i}시간 전"
-                    ) {}
-                }
-            }
+        GoBtnType1(
+            modifier = Modifier.fillMaxWidth(),
+            title = "비밀 창고",
+            subTitle = "수집한 증거를 볼 수 있어요",
+            painterId = R.drawable.ic_secret_box,
+            iconHeight = 117.dp,
+            titleFontSize = 22.sp,
+            subTitleFontSize = 13.sp
+        ) {
+            Toast.makeText(applicationContext, "비밀 창고 기능은 아직 준비중입니다.", Toast.LENGTH_LONG).show()
         }
 
         Spacer(Modifier.size(8.dp))
@@ -208,8 +209,8 @@ class MainActivity : ComponentActivity() {
         GoBtnType2(
             title = "신고하기",
             subTitle = "수집한 증거들을 이용하여 신고할 수 있어요",
-            painterId = R.drawable.home_report,
-            iconHeight = 40.dp
+            painterId = R.drawable.ic_report_problem,
+            iconSize = 40.dp
         ) {
             Toast.makeText(applicationContext, "신고 기능은 아직 준비중입니다.", Toast.LENGTH_LONG).show()
         }
@@ -246,6 +247,8 @@ class MainActivity : ComponentActivity() {
         modifier: Modifier = Modifier,
         title: String,
         subTitle: String,
+        titleFontSize: TextUnit = 20.sp,
+        subTitleFontSize: TextUnit = 12.sp,
         painterId: Int,
         iconHeight: Dp,
         onClick: () -> Unit
@@ -255,7 +258,7 @@ class MainActivity : ComponentActivity() {
                 .fillMaxWidth()
                 .height(160.dp)
                 .clip(Shapes.medium)
-                .background(PureWhite)
+                .background(Blue800)
                 .clickable { onClick() }
         ) {
             val (titles, img) = createRefs()
@@ -264,8 +267,9 @@ class MainActivity : ComponentActivity() {
                 top.linkTo(parent.top, margin = 18.dp)
                 start.linkTo(parent.start, margin = 18.dp)
             }) {
-                Text(subTitle, color = LightGray300, fontSize = 12.sp)
-                Text(title, color = PureBlack, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(subTitle, color = Gray300, fontSize = subTitleFontSize)
+                Spacer(Modifier.size(2.dp))
+                Text(title, color = White, fontSize = titleFontSize, fontWeight = FontWeight.Bold)
             }
             Image(
                 painter = painterResource(id = painterId),
@@ -284,22 +288,27 @@ class MainActivity : ComponentActivity() {
         title: String,
         subTitle: String,
         painterId: Int,
-        iconHeight: Dp,
+        iconSize: Dp,
         onClick: () -> Unit
     ) {
         Row(
             Modifier
                 .clip(Shapes.medium)
-                .background(PureWhite)
+                .background(Blue800)
                 .clickable { onClick() }
-                .padding(vertical = 20.dp, horizontal = 18.dp)
+                .padding(vertical = 24.dp, horizontal = 18.dp)
                 .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Image(painterResource(id = painterId), "아이콘", modifier = Modifier.height(iconHeight))
+            Icon(
+                painterResource(id = painterId),
+                "아이콘",
+                modifier = Modifier.size(iconSize),
+                tint = RedAccent
+            )
             Spacer(Modifier.size(16.dp))
             Column {
-                Text(subTitle, fontSize = 12.sp, color = LightGray300)
+                Text(subTitle, fontSize = 13.sp, color = Gray300)
                 Spacer(Modifier.size(2.dp))
-                Text(title, fontSize = 20.sp, color = LightRed, fontWeight = FontWeight.Bold)
+                Text(title, fontSize = 24.sp, color = RedAccent, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -307,37 +316,26 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun ListBox(
         name: String,
-        showMore: Boolean = true,
         onClick: () -> Unit,
         itemSection: @Composable ((onClick: () -> Unit) -> Unit)
     ) {
         Column(
             Modifier
                 .clip(Shapes.medium)
-                .background(PureWhite)
+                .background(Blue800)
         ) {
             Text(
                 "$name >",
                 fontSize = 20.sp, fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clickable { onClick() }
-                    .padding(start = 18.dp, top = 20.dp, bottom = 10.dp)
+                    .padding(start = 18.dp, top = 24.dp, bottom = 10.dp)
                     .fillMaxWidth()
             )
             Surface(Modifier.fillMaxWidth()) {
                 itemSection(onClick)
             }
-
-            if (showMore) Text(
-                "더보기",
-                color = LightGray300,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onClick() }
-                    .padding(vertical = 14.dp)
-            )
+            Spacer(Modifier.size(8.dp))
         }
     }
 
@@ -348,90 +346,93 @@ class MainActivity : ComponentActivity() {
         infoText: String = "",
         onClick: () -> Unit
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .clickable { onClick() }
-                .padding(vertical = 12.dp, horizontal = 18.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                Modifier
-                    .weight(1f)
-            ) {
-                Text(title, maxLines = 1, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                Spacer(Modifier.size(2.dp))
-                Text(
-                    subTitle,
-                    maxLines = 1,
-                    fontSize = 12.sp,
-                    color = LightGray300,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+
+        ConstraintLayout(Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp, horizontal = 18.dp)) {
+            val (t, st, i) = createRefs()
+
+            Text(
+                title,
+                maxLines = 1,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = Gray50,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.constrainAs(t) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(i.start, margin = 4.dp)
+
+                    width = Dimension.fillToConstraints
+                }
+            )
+
             Text(
                 infoText,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                color = LightGray300,
-                modifier = Modifier.padding(start = 4.dp)
+                color = Gray500,
+                modifier = Modifier.constrainAs(i) {
+                    top.linkTo(t.top)
+                    bottom.linkTo(t.bottom)
+                    end.linkTo(parent.end)
+                }
             )
-        }
-    }
 
-    @Composable
-    private fun ListBoxBlurItem(onClick: () -> Unit) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .clickable { onClick() }, contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.blur),
-                contentDescription = "",
-                Modifier.fillMaxWidth()
+            Text(
+                subTitle,
+                maxLines = 1,
+                fontSize = 12.sp,
+                color = Gray500,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.constrainAs(st) {
+                    start.linkTo(parent.start)
+                    top.linkTo(t.bottom, margin = 4.dp)
+                    end.linkTo(i.start, margin = 4.dp)
+                    bottom.linkTo(parent.bottom)
+
+                    width = Dimension.fillToConstraints
+                }
             )
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Filled.Lock, "", Modifier.size(28.dp), LightGray300)
-                Spacer(Modifier.size(8.dp))
-                Text(
-                    "현재는 잠금모드예요",
-                    fontSize = 14.sp,
-                    color = LightGray400,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(Modifier.size(2.dp))
-                Text(
-                    "눌러서 잠금을 해제하면 비밀창고 내용을 볼 수 있어요",
-                    fontSize = 12.sp,
-                    color = LightGray300,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center
-                )
-            }
         }
     }
 
     @ExperimentalMaterialApi
     @Composable
-    private fun VoiceRecordBottomDrawer() {
+    private fun BottomSheet(nowSheet: Sheet?) {
+        when (nowSheet) {
+            Sheet.RECORD -> VoiceRecordBottomSheet()
+            Sheet.MORE -> MoreBottomSheet()
+            else -> Spacer(modifier = Modifier.height(1.dp))
+        }
+    }
+
+    @ExperimentalMaterialApi
+    @Composable
+    private fun VoiceRecordBottomSheet() {
         val coroutineScope = rememberCoroutineScope()
+        BackHandler(enabled = sheetState.isVisible) {
+            coroutineScope.launch {
+                sheetState.hide()
+            }
+        }
+
         Column(Modifier.padding(horizontal = 24.dp, vertical = 32.dp)) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("녹음하기", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = PureWhite)
+                Text("녹음하기", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = White)
                 Icon(Icons.Filled.Clear,
                     contentDescription = "delete",
-                    tint = DarkGray600,
+                    tint = Gray300,
                     modifier = Modifier
                         .size(32.dp)
                         .clickable {
-                            coroutineScope.launch { drawerState.close() }
+                            coroutineScope.launch { sheetState.hide() }
                         }
                         .padding(4.dp))
             }
@@ -440,8 +441,8 @@ class MainActivity : ComponentActivity() {
                 "녹음 시작하기를 누르면 앱에서 나가지며, 녹음이 시작됩니다.\n" +
                         "녹음을 중지하시려면, 볼륨 버튼 두개를 동시에 약 2초간 눌러주세요.",
                 fontWeight = FontWeight.Medium,
-                color = LightGray300,
-                fontSize = 14.sp,
+                color = Gray300,
+                fontSize = 13.sp,
                 modifier = Modifier
                     .padding(vertical = 32.dp)
                     .fillMaxWidth()
@@ -449,13 +450,13 @@ class MainActivity : ComponentActivity() {
 
             Text("녹음 시작하기",
                 fontWeight = FontWeight.Medium,
-                color = PureWhite,
+                color = White,
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .clip(Shapes.medium)
                     .background(
-                        DarkRedRecording
+                        RedAccent
                     )
                     .fillMaxWidth()
                     .clickable {
@@ -464,12 +465,74 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     .padding(vertical = 16.dp))
-            Text(
-                text = "녹음이 진행될 때는 앱을 완전히 종료하지는 마세요.\n녹음이 저장되지 않을 수 있습니다.",
-                color = DarkGray600,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 28.dp)
-            )
+            Row() {
+                Text(
+                    text = "※",
+                    color = Gray500,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 28.dp, end = 4.dp)
+                )
+                Text(
+                    text = "녹음이 진행될 때는 앱을 완전히 종료하지는 마세요.\n" +
+                            "녹음이 저장되지 않을 수 있습니다.",
+                    color = Gray500,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(top = 28.dp)
+                )
+            }
+        }
+    }
+
+    @ExperimentalMaterialApi
+    @Composable
+    private fun MoreBottomSheet() {
+        val coroutineScope = rememberCoroutineScope()
+        BackHandler(enabled = sheetState.isVisible) {
+            coroutineScope.launch { sheetState.hide() }
+        }
+
+        Column(Modifier.fillMaxWidth()) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp)
+            ) {
+                Text("더보기", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = White)
+                Icon(Icons.Filled.Clear,
+                    contentDescription = "delete",
+                    tint = Gray300,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clickable { coroutineScope.launch { sheetState.hide() } }
+                        .padding(4.dp))
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clickable {
+                        startActivity(Intent(this@MainActivity, ChangeActivity::class.java))
+                    }
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+            ) {
+                Icon(Icons.Filled.PhonelinkLock, contentDescription = "앱 숨김 설정", tint = Blue200, modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.size(24.dp))
+                Text("앱 숨김 설정", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Gray50)
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clickable { }
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp)
+            ) {
+                Icon(Icons.Filled.NotificationImportant, contentDescription = "내 신고 현황", tint = Blue200, modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.size(24.dp))
+                Text("내 신고 현황", fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Gray50)
+            }
+            Spacer(modifier = Modifier.size(16.dp))
         }
     }
 
@@ -491,7 +554,7 @@ class MainActivity : ComponentActivity() {
                     .check()
             }
         if (permissionResult.isGranted) {
-            drawerState.close()
+            sheetState.hide()
             ForegroundServiceUtils.runForegroundService(
                 applicationContext,
                 ForegroundServiceUtils.ForegroundServiceType.SOUND_RECORD_SERVICE

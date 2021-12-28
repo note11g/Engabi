@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.note11.engabi.ui.theme.DarkGray800
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.note11.engabi.ui.theme.Blue600
 import kotlinx.coroutines.launch
 
 
@@ -43,7 +43,7 @@ import kotlinx.coroutines.launch
 fun CustomBottomSheetScaffold(
     scaffoldState: BottomSheetScaffoldState,
     sheetContent: @Composable ColumnScope.() -> Unit,
-    sheetBackgroundColor: Color = DarkGray800,
+    sheetBackgroundColor: Color = Blue600,
     content: @Composable (PaddingValues) -> Unit
 ) {
     BottomSheetScaffold(
@@ -55,12 +55,38 @@ fun CustomBottomSheetScaffold(
         sheetShape = RoundedCornerShape(
             bottomStart = 0.dp,
             bottomEnd = 0.dp,
-            topStart = 12.dp,
-            topEnd = 12.dp
+            topStart = 16.dp,
+            topEnd = 16.dp
         ),
         content = content
     )
 }
+
+@ExperimentalMaterialApi
+@Composable
+fun CustomBottomSheetLayout(
+    modifier: Modifier = Modifier,
+    bottomSheetState: ModalBottomSheetState,
+    sheetContent: @Composable ColumnScope.() -> Unit,
+    sheetBackgroundColor: Color = Blue600,
+    sheetShape: Shape = RoundedCornerShape(
+        bottomStart = 0.dp,
+        bottomEnd = 0.dp,
+        topStart = 16.dp,
+        topEnd = 16.dp
+    ),
+    content: @Composable () -> Unit
+) {
+    ModalBottomSheetLayout(
+        modifier = modifier,
+        sheetContent = sheetContent,
+        sheetState = bottomSheetState,
+        sheetBackgroundColor = sheetBackgroundColor,
+        sheetShape = sheetShape,
+        content = content
+    )
+}
+
 
 @ExperimentalMaterialApi
 @Composable
@@ -70,10 +96,10 @@ fun CustomBottomDrawer(
     drawerShape: Shape = RoundedCornerShape(
         bottomStart = 0.dp,
         bottomEnd = 0.dp,
-        topStart = 12.dp,
-        topEnd = 12.dp
-    ), drawerElevation: Dp = 0.dp,
-    drawerBackgroundColor: Color = DarkGray800,
+        topStart = 16.dp,
+        topEnd = 16.dp
+    ), drawerElevation: Dp = 16.dp,
+    drawerBackgroundColor: Color = Blue600,
     drawerContent: @Composable ColumnScope.() -> Unit,
     content: @Composable () -> Unit
 ) = BottomDrawer(

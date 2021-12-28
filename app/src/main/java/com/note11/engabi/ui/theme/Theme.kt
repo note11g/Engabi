@@ -10,14 +10,27 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 
 private val LightColorPalette = lightColors(
-    primary = LightBlue,
-    primaryVariant = DarkBlue,
-    secondary = DarkRedRecording,
-    background = LightGray100,
+    primary = Blue800,
+    primaryVariant = Blue700,
+    secondary = BlueAccent,
+    secondaryVariant = RedAccent,
+    background = Blue500,
     surface = Color.Transparent,
-    onPrimary = PureWhite,
-    onSecondary = PureWhite,
-    onBackground = PureBlack
+    onPrimary = White,
+    onSecondary = White,
+    onBackground = White
+)
+
+private val DarkColorPalette = darkColors(
+    primary = Blue800,
+    primaryVariant = Blue700,
+    secondary = BlueAccent,
+    secondaryVariant = RedAccent,
+    background = Blue500,
+    surface = Color.Transparent,
+    onPrimary = White,
+    onSecondary = White,
+    onBackground = White
 )
 
 @Composable
@@ -27,7 +40,7 @@ fun EngabiTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable
         color = StatusBarColor
     )
     MaterialTheme(
-        colors = LightColorPalette,
+        colors = if(!darkTheme) LightColorPalette else DarkColorPalette,
         typography = Typography,
         shapes = Shapes,
         content = content
