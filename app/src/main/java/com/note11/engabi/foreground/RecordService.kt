@@ -132,7 +132,6 @@ class RecordService : Service() {
             setAudioEncodingBitRate(96000)
             setOutputFile(filePath)
 
-            //음성 녹음 시작
             prepare()
             start()
         }
