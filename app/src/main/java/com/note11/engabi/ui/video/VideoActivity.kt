@@ -9,13 +9,12 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
 import android.hardware.camera2.params.OutputConfiguration
 import android.hardware.camera2.params.SessionConfiguration
-import android.media.MediaCodec
-import android.media.MediaRecorder
-import android.media.MediaScannerConnection
+import android.media.*
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.telecom.VideoProfile
 import android.util.Log
 import android.util.Range
 import android.view.*
@@ -92,7 +91,7 @@ class VideoActivity : ComponentActivity() {
             }
         }
 
-        Log.d(TAG, camMap.toString())
+        Log.d(TAG, "CAM MAP: ${camMap.toString()}")
 
         camMap
     }
@@ -334,6 +333,10 @@ class VideoActivity : ComponentActivity() {
             setAudioSamplingRate(44100)
             setAudioEncodingBitRate(96000)
             setVideoEncodingBitRate(6_000_000)
+//            setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH))
+//            setProfile(CamcorderProfile.QUALITY_HIGH)
+//            setAudioProfile(AudioProfile.)
+            Log.d(TAG, "FPS : ${camera.fps}")
             if (camera.fps > 0) setVideoFrameRate(camera.fps)
             setVideoSize(camera.size.width, camera.size.height)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
