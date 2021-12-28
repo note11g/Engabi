@@ -19,7 +19,9 @@ data class CameraModel(
         return Size(720, 480)
     }
 
-    fun getMaxSizeModel(): CameraModel = CameraModel(cameraId, getMaxSize(), fps, lensFacing, fov)
+    private fun getMaxFps() : Int = if(fps > 30) 30 else fps
+
+    fun getMaxSizeModel(): CameraModel = CameraModel(cameraId, getMaxSize(), getMaxFps(), lensFacing, fov)
 }
 
 enum class Lens {
