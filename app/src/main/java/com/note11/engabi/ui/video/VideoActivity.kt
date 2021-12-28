@@ -383,7 +383,10 @@ class VideoActivity : ComponentActivity() {
 
     private fun stopRecording() = lifecycleScope.launch(Dispatchers.IO) {
         delay(500L)
-        recorder.stop()
+        try { recorder.stop() }
+        catch (e: Exception) {
+            Log.e(TAG, e.toString())
+        }
 
         recordingState.value = false
 
