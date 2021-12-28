@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.StatFs
 import androidx.core.content.FileProvider
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 object GetFilesUtil {
     fun getFiles(context: Context) : Array<File> = File(context.filesDir.absolutePath).listFiles()
@@ -31,6 +33,20 @@ object GetFilesUtil {
         val stat = StatFs(context.filesDir.absolutePath)
 
         return stat.availableBlocksLong * stat.blockSizeLong
+    }
+
+    fun getCanRecordInSec(context: Context, audioBitRate: Int = 96000, videoBitRate: Int = 6_000_000) : Long {
+        val available = getAvailableMemory(context)
+        val bitrate = audioBitRate + videoBitRate
+        return available / bitrate
+    }
+
+    fun getCanRecordFormat(context: Context, pattern: String = "HH시간 mm분", audioBitRate: Int = 96000, videoBitRate: Int = 6_000_000) : String {
+        val sec = getCanRecordInSec(context, audioBitRate, videoBitRate)
+        val date = Date(sec)
+        val format = SimpleDateFormat(pattern)
+
+        return format.format(date)
     }
 
     fun moveFile2PrivateFolder(context: Context, file: File) : Boolean = file.renameTo(File(context.filesDir.absolutePath, file.name))

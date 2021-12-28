@@ -63,6 +63,7 @@ import com.note11.engabi.model.native.CameraModel
 import com.note11.engabi.model.native.Lens
 import com.note11.engabi.ui.theme.EngabiTheme
 import com.note11.engabi.ui.theme.spoqaFamily
+import com.note11.engabi.util.GetFilesUtil
 import com.note11.engabi.util.video.AutoFitSurfaceView
 import com.note11.engabi.util.video.CameraUtil
 import kotlinx.coroutines.Dispatchers
@@ -354,6 +355,7 @@ class VideoActivity : ComponentActivity() {
     }
 
     private fun startRecording() {
+//        Log.d(TAG, "TEST : ${GetFilesUtil.getCanRecordFormat(applicationContext)}")
         recorder = createRecorder(
             camIdMap[camIdState.value]!!,
             recorderSurface
