@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.MaterialTheme
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material.Text
@@ -54,7 +55,7 @@ class Register3Activity : ComponentActivity() {
             EngabiTheme {
                 ProvideWindowInsets(windowInsetsAnimationsEnabled = true) {
                     ConstraintLayout(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)
                     ) {
                         val (indicator, content) = createRefs()
 
@@ -88,13 +89,13 @@ class Register3Activity : ComponentActivity() {
 
         Column(modifier) {
             Column {
-                Text("실명을 입력해주세요", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("실명을 입력해주세요", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = White)
                 Spacer(Modifier.size(4.dp))
                 Text(
                     "입력하신 모든 정보는 공개되지 않아요",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = LightGray300
+                    color = Gray300
                 )
             }
             Spacer(Modifier.size(64.dp))
@@ -108,19 +109,19 @@ class Register3Activity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(2.dp)
-                    .background(color = LightGray300)
+                    .background(color = Gray300)
             )
             Spacer(Modifier.size(80.dp))
             Text(
                 "마치기",
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
-                color = PureWhite,
+                color = White,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(Shapes.medium)
-                    .background(LightBlue)
+                    .background(BlueAccent)
                     .clickable { goToNextStep(name.value) }
                     .padding(vertical = 16.dp)
             )

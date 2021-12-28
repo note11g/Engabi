@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,7 +39,7 @@ class LoginActivity : ComponentActivity() {
                 Column(
                     Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.SpaceEvenly,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Image(
                         painterResource(id = R.drawable.ic_login_logo),
@@ -47,7 +48,7 @@ class LoginActivity : ComponentActivity() {
                     )
                     Image(
                         painterResource(id = R.drawable.kakao_login_large_wide),
-                        "은가비 로고",
+                        "카카오톡 로그인",
                         Modifier
                             .fillMaxWidth(0.8f)
                             .clip(Shapes.small)

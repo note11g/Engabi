@@ -48,7 +48,7 @@ import com.google.accompanist.pager.rememberPagerState
 import com.note11.engabi.R
 import com.note11.engabi.model.UserModel
 import com.note11.engabi.ui.theme.EngabiTheme
-import com.note11.engabi.ui.theme.PureWhite
+import com.note11.engabi.ui.theme.White
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -165,7 +165,7 @@ class SecretboxActivity : ComponentActivity() {
                 modifier = Modifier
                     .size(32.dp)
                     .rotate(270f),
-                tint = PureWhite,
+                tint = White,
             )
         }
     }

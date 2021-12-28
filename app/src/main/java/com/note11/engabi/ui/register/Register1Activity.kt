@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,8 +31,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.*
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -70,7 +67,7 @@ class Register1Activity : ComponentActivity() {
             EngabiTheme {
                 ProvideWindowInsets(windowInsetsAnimationsEnabled = true) {
                     ConstraintLayout(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background)
                     ) {
                         val (indicator, content) = createRefs()
                         val focusManager = LocalFocusManager.current
@@ -112,13 +109,13 @@ class Register1Activity : ComponentActivity() {
 
         Column(modifier.scrollable(scrollState, Orientation.Vertical), Arrangement.Center) {
             Column {
-                Text("생년월일을 입력해주세요", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Text("생년월일을 입력해주세요", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = White)
                 Spacer(Modifier.size(4.dp))
                 Text(
                     "입력하신 모든 정보는 공개되지 않아요",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = LightGray300
+                    color = Gray300
                 )
             }
             Spacer(Modifier.size(64.dp))
@@ -172,19 +169,19 @@ class Register1Activity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(2.dp)
-                    .background(color = LightGray300)
+                    .background(color = Gray300)
             )
             Spacer(Modifier.size(80.dp))
             Text(
                 "다음",
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
-                color = PureWhite,
+                color = White,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(Shapes.medium)
-                    .background(LightBlue)
+                    .background(BlueAccent)
                     .clickable { goToNextStep("${year.value}${if (month.value.length == 1) "0" else ""}${month.value}${if (date.value.length == 1) "0" else ""}${date.value}") }
                     .padding(vertical = 16.dp)
             )
@@ -222,7 +219,8 @@ fun CustomTextField(
             fontFamily = spoqaFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 18.sp,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            color = White
         ),
         onValueChange = onChange,
         keyboardOptions = KeyboardOptions(
@@ -235,7 +233,7 @@ fun CustomTextField(
                     fontFamily = spoqaFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 18.sp,
-                    color = LightGray300,
+                    color = Gray500,
                     textAlign = TextAlign.Center
                 ), modifier = Modifier.fillMaxWidth()
             )
@@ -259,7 +257,7 @@ fun CustomTextFieldGuildText(text: String, endPadding: Dp, modifier: Modifier = 
         textAlign = TextAlign.Center,
         fontWeight = FontWeight.Medium,
         fontSize = 18.sp,
-        color = LightGray300,
+        color = Gray500,
         modifier = modifier.padding(end = endPadding)
     )
 }
@@ -338,7 +336,7 @@ fun ProgressIndicator(
 @Composable
 fun IndicatorText(modifier: Modifier, text: String, isNow: Boolean) {
     Text(
-        text, color = if (isNow) LightGray400 else LightGray300,
+        text, color = if (isNow) Gray100 else Gray500,
         textAlign = TextAlign.Center,
         fontSize = if (isNow) 12.sp else 10.sp,
         fontWeight = if (isNow) FontWeight.Medium else FontWeight.Normal,
@@ -352,13 +350,13 @@ fun CircleIndicatorItem(modifier: Modifier = Modifier, num: Int, nowIndex: Int) 
         shape = CircleShape,
         modifier = modifier
             .size(44.dp),
-        color = if (num == nowIndex + 1) LightBlue else Color.Transparent,
-        border = BorderStroke(1.dp, color = LightBlue)
+        color = if (num == nowIndex + 1) BlueAccent else Color.Transparent,
+        border = BorderStroke(1.dp, color = BlueAccent)
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
                 "$num",
-                color = if (num == nowIndex + 1) PureWhite else LightBlue,
+                color = if (num == nowIndex + 1) White else BlueAccent,
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
@@ -370,7 +368,7 @@ fun CircleIndicatorItem(modifier: Modifier = Modifier, num: Int, nowIndex: Int) 
 @Composable
 fun DottedLine(
     modifier: Modifier = Modifier,
-    lineColor: Color = LightBlue,
+    lineColor: Color = BlueAccent,
     height: Dp = 1.dp,
     step: Dp = 8.dp
 ) {
