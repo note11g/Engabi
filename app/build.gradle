@@ -120,6 +120,9 @@ dependencies {
 
     implementation 'com.github.myinnos:AppIconNameChanger:1.0.7'
 
+    //biometric
+    implementation "androidx.biometric:biometric:1.1.0"
+
     // Test
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
