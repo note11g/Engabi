@@ -81,7 +81,7 @@ import kotlin.coroutines.suspendCoroutine
 class VideoActivity : ComponentActivity() {
     private val cameraManager by lazy { getSystemService(Context.CAMERA_SERVICE) as CameraManager }
 
-    private val outputFile by lazy { createFile(applicationContext, "mp4") }
+    private var filePath: String? = null
 
     private val camIdMap: Map<String, CameraModel> by lazy {
         val camMap = mutableMapOf<String, CameraModel>()
@@ -321,7 +321,7 @@ class VideoActivity : ComponentActivity() {
         }, modifier = modifier.fillMaxSize())
     }
 
-    private fun createRecorder(camera: CameraModel, surface: Surface) =
+    private fun createRecorder(camera: CameraModel, surface: Surface, path: String? = null) =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             MediaRecorder(applicationContext)
         } else {
@@ -330,7 +330,7 @@ class VideoActivity : ComponentActivity() {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setOutputFile(outputFile.absolutePath)
+            setOutputFile(path)
             setAudioSamplingRate(44100)
             setAudioEncodingBitRate(96000)
             setVideoEncodingBitRate(6_000_000)
@@ -356,9 +356,11 @@ class VideoActivity : ComponentActivity() {
 
     private fun startRecording() {
 //        Log.d(TAG, "TEST : ${GetFilesUtil.getCanRecordFormat(applicationContext)}")
+        filePath = createFile(applicationContext, "mp4").absolutePath
         recorder = createRecorder(
             camIdMap[camIdState.value]!!,
-            recorderSurface
+            recorderSurface,
+            filePath
         )
         lifecycleScope.launch(Dispatchers.IO) {
             recordRequest = session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
@@ -396,15 +398,15 @@ class VideoActivity : ComponentActivity() {
         recordingState.value = false
 
         MediaScannerConnection.scanFile(
-            applicationContext, arrayOf(outputFile.absolutePath), null, null
+            applicationContext, arrayOf(filePath), null, null
         )
 
         startActivity(Intent().apply {
             action = Intent.ACTION_VIEW
             type = MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(outputFile.extension)
+                .getMimeTypeFromExtension(filePath)
             val authority = "${BuildConfig.APPLICATION_ID}.provider"
-            data = FileProvider.getUriForFile(applicationContext, authority, outputFile)
+            data = FileProvider.getUriForFile(applicationContext, authority, File(filePath))
             flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
                     Intent.FLAG_ACTIVITY_CLEAR_TOP
         })
