@@ -148,7 +148,7 @@ class RecordService : Service() {
         Toast.makeText(applicationContext, "저장되었습니다.", Toast.LENGTH_SHORT).show()
 
         //TODO: remove this(test)
-        GetFilesUtil.playAudioIntent(applicationContext, File(filePath))
+//        GetFilesUtil.playAudioIntent(applicationContext, File(filePath))
 
         mediaRecorder = null
     }
