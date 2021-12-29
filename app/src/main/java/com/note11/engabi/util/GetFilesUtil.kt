@@ -10,16 +10,15 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object GetFilesUtil {
-    fun getFiles(context: Context) : Array<File> = File(context.filesDir.absolutePath).listFiles()
+    fun getFiles(context: Context, extension: List<String>? = null) : List<File> {
+        var files = File(context.filesDir.absolutePath).listFiles()?.toList()
+        extension?.let { ext ->
+            files = files?.filter { file ->
+                ext.contains(file.extension)
+            }
+        }
 
-    fun getVideoFiles(context: Context) : List<File> {
-        val extensions = Arrays.asList("mp4")
-        return getFiles(context).filter { file -> extensions.contains(file.extension) }
-    }
-
-    fun getAudioFiles(context: Context) : List<File> {
-        val extensions = Arrays.asList("mp3")
-        return getFiles(context).filter { file -> extensions.contains(file.extension) }
+        return files ?: listOf()
     }
 
     fun getFileFromPath(path: String) = File(path)
@@ -39,13 +38,13 @@ object GetFilesUtil {
         context.startActivity(intent)
     }
 
-    fun getAvailableMemory(context: Context) : Long {
+    private fun getAvailableMemory(context: Context) : Long {
         val stat = StatFs(context.filesDir.absolutePath)
 
         return stat.availableBlocksLong * stat.blockSizeLong
     }
 
-    fun getCanRecordInSec(context: Context, audioBitRate: Int = 96000, videoBitRate: Int = 6_000_000) : Long {
+    private fun getCanRecordInSec(context: Context, audioBitRate: Int = 96000, videoBitRate: Int = 6_000_000) : Long {
         val available = getAvailableMemory(context)
         val bitrate = audioBitRate + videoBitRate
         return available / bitrate

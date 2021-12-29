@@ -79,7 +79,7 @@ class SplashActivity : ComponentActivity() {
                 }
             }
         } else {
-            if (!checkAccessibilityPermissions()) { //todo : delete false on release
+            if (false && !checkAccessibilityPermissions()) { //todo : delete false on release
                 AccAlertDialog {
                     startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                     Toast.makeText(

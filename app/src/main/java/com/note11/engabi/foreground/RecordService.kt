@@ -40,15 +40,12 @@ class RecordService : Service() {
             startForegroundService()
         else startForeground(1, Notification())
 
-        //음성 기록 파일 생성(테스트용)
-//        var file = File(applicationContext.getExternalFilesDir(null), "${UUID.randomUUID()}.mp3")
-
         val file = File(
             applicationContext.filesDir,
             "REC_${
                 SimpleDateFormat(
-                    "yy-MM-dd_HH-mm-ss_SSSS",
-                    Locale.getDefault()
+                    "yyMMdd_HHmmss_SSS",
+                    Locale.KOREA
                 ).format(System.currentTimeMillis())
             }.mp3"
         )

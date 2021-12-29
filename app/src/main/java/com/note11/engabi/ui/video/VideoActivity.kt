@@ -93,8 +93,6 @@ class VideoActivity : ComponentActivity() {
             }
         }
 
-        Log.d(TAG, "CAM MAP: ${camMap.toString()}")
-
         camMap
     }
     private val camIdState = MutableStateFlow("0")
@@ -116,6 +114,10 @@ class VideoActivity : ComponentActivity() {
     private lateinit var defaultFilePath: String
 
     private val recordingState = MutableStateFlow(false)
+
+    private val leftTime by lazy {
+        GetFilesUtil.getCanRecordFormat(applicationContext, "H시간 m분")
+    }
 
     private fun previewRequest(surfaceView: SurfaceView): CaptureRequest {
         return session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
@@ -204,7 +206,7 @@ class VideoActivity : ComponentActivity() {
                                     fontSize = 12.sp
                                 )
                                 Text(
-                                    "14시간 32분", // todo : change time dynamically
+                                    leftTime, // todo : change time dynamically
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp
@@ -339,9 +341,6 @@ class VideoActivity : ComponentActivity() {
             setAudioSamplingRate(44100)
             setAudioEncodingBitRate(96000)
             setVideoEncodingBitRate(6_000_000)
-//            setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH))
-//            setProfile(CamcorderProfile.QUALITY_HIGH)
-//            setAudioProfile(AudioProfile.)
             Log.d(TAG, "FPS : ${camera.fps}")
             if (camera.fps > 0) setVideoFrameRate(camera.fps)
             setVideoSize(camera.size.width, camera.size.height)
@@ -406,15 +405,7 @@ class VideoActivity : ComponentActivity() {
             applicationContext, arrayOf(filePath), null, null
         )
 
-        startActivity(Intent().apply {
-            action = Intent.ACTION_VIEW
-            type = MimeTypeMap.getSingleton()
-                .getMimeTypeFromExtension(filePath)
-            val authority = "${BuildConfig.APPLICATION_ID}.provider"
-            data = FileProvider.getUriForFile(applicationContext, authority, File(filePath))
-            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP
-        })
+        Toast.makeText(applicationContext, "녹화가 끝났습니다.", Toast.LENGTH_SHORT).show()
     }
 
     private fun initializeCamera() = lifecycleScope.launch(Dispatchers.Main) {
@@ -571,7 +562,7 @@ class VideoActivity : ComponentActivity() {
         private val TAG = VideoActivity::class.java.simpleName
 
         private fun createFile(context: Context, extension: String): File {
-            val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
+            val sdf = SimpleDateFormat("yyMMdd_HHmmss_SSS", Locale.KOREA)
             return File(context.filesDir, "VID_${sdf.format(Date())}.$extension")
         }
     }

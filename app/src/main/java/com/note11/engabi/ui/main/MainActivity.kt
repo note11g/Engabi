@@ -201,7 +201,7 @@ class MainActivity : ComponentActivity() {
             titleFontSize = 22.sp,
             subTitleFontSize = 13.sp
         ) {
-            Toast.makeText(applicationContext, "비밀 창고 기능은 아직 준비중입니다.", Toast.LENGTH_LONG).show()
+            startActivity(Intent(this, SecretboxActivity::class.java))
         }
 
         Spacer(Modifier.size(8.dp))

@@ -3,9 +3,12 @@ package com.note11.engabi.ui.secretbox
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,9 +26,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyVerticalGrid
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,127 +45,211 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
+import com.note11.engabi.BuildConfig
 import com.note11.engabi.R
 import com.note11.engabi.model.UserModel
-import com.note11.engabi.ui.theme.EngabiTheme
-import com.note11.engabi.ui.theme.White
+import com.note11.engabi.ui.theme.*
 import kotlinx.coroutines.launch
+import java.nio.file.Files
+import java.text.SimpleDateFormat
 import java.util.*
 
 class SecretboxActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalPagerApi::class)
+    private val viewModel by viewModels<SecretboxViewModel>()
+    private val deleteMode by lazy { mutableStateOf(false) }
+
+    @OptIn(ExperimentalPagerApi::class, ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        viewModel.loadFiles()
+
         setContent {
             EngabiTheme {
                 Scaffold(
-                    backgroundColor = Color(0xFFF3F3F3),
-                    floatingActionButton = { UploadFab() }
-                ) {
-                    Column {
-                        val pagerState: PagerState = rememberPagerState(initialPage = 0)
-                        val coroutineScope = rememberCoroutineScope()
-                        val tabList = listOf("녹음", "사진 ∙ 동영상")
-
-                        Column(modifier = Modifier.background(Color(0xFFFCFCFC))) {
-                            BackToHome {
-                                this@SecretboxActivity.finish()
-                            }
-                            Text(
-                                "비밀창고",
-                                modifier = Modifier.padding(
-                                    start = 16.dp,
-                                    top = 16.dp,
-                                    bottom = 8.dp
-                                ),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 28.sp,
-                            )
-                            TabRow(selectedTabIndex = pagerState.currentPage,
-                                backgroundColor = Color(0xFFFCFCFC),
-                                indicator = { tabPositions: List<TabPosition> ->
-                                    Box(
+                    backgroundColor = Blue900,
+                    floatingActionButton = { UploadFab() },
+                    topBar = {
+                        TopAppBar(
+                            backgroundColor = Color.Transparent,
+                            elevation = 0.dp,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
                                         modifier = Modifier
-                                            .tabIndicatorOffset(tabPositions[pagerState.currentPage])
-                                            .height(3.dp)
-                                            .background(Color(0xFF7E9EDE))
+                                            .height(28.dp)
+                                            .clickable { this@SecretboxActivity.finish() }
+                                            .padding(4.dp),
+                                        imageVector = Icons.Filled.ArrowBackIos,
+                                        contentDescription = "홈으로 돌아가기",
+                                        tint = White
                                     )
-                                }) {
-                                tabList.forEachIndexed { index, text ->
-                                    Tab(selected = pagerState.currentPage == index,
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                pagerState.animateScrollToPage(index)
+                                    Spacer(modifier = Modifier.size(16.dp))
+                                    Text(
+                                        "비밀 창고",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = White
+                                    )
+                                }
+
+
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (deleteMode.value) Icon(
+                                        modifier = Modifier
+                                            .height(36.dp)
+                                            .padding(end = 8.dp)
+                                            .clickable {
+                                                viewModel.deleteSelectedFiles()
+                                                viewModel.selectFiles.clear()
+                                                deleteMode.value = false
                                             }
-                                        },
-                                        text = {
-                                            Text(
-                                                text = text,
-                                                letterSpacing = 0.sp,
-                                                fontWeight = FontWeight.Medium,
-                                                fontSize = 14.sp,
-                                                color = Color(if (pagerState.currentPage == index) 0xFF7E9EDE else 0xFFC4C4C4)
-                                            )
-                                        }
+                                            .padding(4.dp),
+                                        imageVector = Icons.Filled.Delete,
+                                        contentDescription = "삭제",
+                                        tint = White,
+                                    )
+
+                                    Icon(
+                                        modifier = Modifier
+                                            .height(36.dp)
+                                            .clickable {
+                                                deleteMode.value = !deleteMode.value
+                                                if (deleteMode.value) {
+                                                    Toast
+                                                        .makeText(
+                                                            applicationContext,
+                                                            "삭제할 파일을 선택해주세요",
+                                                            Toast.LENGTH_SHORT
+                                                        )
+                                                        .show()
+
+
+                                                } else {
+                                                    viewModel.selectFiles.clear()
+                                                }
+                                            }
+                                            .padding(4.dp),
+                                        imageVector = if (!deleteMode.value) Icons.Outlined.Delete else Icons.Filled.Close,
+                                        contentDescription = "삭제",
+                                        tint = White,
                                     )
                                 }
                             }
                         }
-                        HorizontalPager(
-                            state = pagerState,
-                            count = tabList.size,
-                        ) { page: Int ->
-                            when (page) {
-                                0 -> VoiceRecPage()
-                                1 -> VideoRecPage()
+                    }
+                ) {
+
+                    LazyVerticalGrid(
+                        cells = GridCells.Adaptive(160.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        items(viewModel.fileList.value.size) { i ->
+                            viewModel.fileList.value[i].let { file ->
+                                Column(
+                                    modifier = (if (!deleteMode.value) Modifier
+                                        .clickable {
+                                            startActivity(Intent().apply {
+                                                action = Intent.ACTION_VIEW
+                                                type = MimeTypeMap
+                                                    .getSingleton()
+                                                    .getMimeTypeFromExtension(file.extension)
+                                                val authority =
+                                                    "${BuildConfig.APPLICATION_ID}.provider"
+                                                data = FileProvider.getUriForFile(
+                                                    applicationContext,
+                                                    authority,
+                                                    file
+                                                )
+                                                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                                                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                            })
+                                        }
+                                        .background(Blue800) else Modifier
+                                        .selectable(
+                                            selected = viewModel.selectFiles.indexOf(file) != -1
+                                        ) {
+                                            if (viewModel.selectFiles.indexOf(file) != -1) {
+                                                viewModel.selectFiles.remove(file)
+                                            } else {
+                                                viewModel.selectFiles.add(file)
+                                            }
+                                        }
+                                        .background(if (viewModel.selectFiles.indexOf(file) == -1) Blue800 else Blue400))
+                                        .fillMaxSize()
+                                        .padding(
+                                            top = 24.dp,
+                                            start = 16.dp,
+                                            bottom = 16.dp,
+                                            end = 16.dp
+                                        )
+                                ) {
+                                    Text(
+                                        SimpleDateFormat("yy.MM.dd HH:mm:ss", Locale.KOREAN).format(
+                                            file.lastModified()
+                                        ),
+                                        color = White,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.size(4.dp))
+
+                                    Text(
+                                        "${file.extension.uppercase(Locale.ENGLISH)} | ${
+                                            String.format(
+                                                "%.2f",
+                                                file.length().toFloat() / (1024f * 1024f)
+                                            )
+                                        }MB",
+                                        color = Gray500,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Normal
+                                    )
+
+                                    Spacer(modifier = Modifier.size(12.dp))
+
+                                    Text(
+                                        file.nameWithoutExtension,
+                                        color = White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
+
+
                         }
+
                     }
                 }
-
-
             }
-        }
-    }
-
-
-    @Composable
-    fun BackToHome(onTap: () -> Unit) {
-        Row(
-            modifier = Modifier
-                .padding(start = 16.dp, top = 20.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .clickable { onTap() }
-                .padding(0.dp, 4.dp, 4.dp, 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                imageVector = Icons.Filled.ArrowBackIos,
-                contentDescription = "홈으로 돌아가기",
-                tint = Color(0xFF7E9EDE)
-            )
-            Text(
-                "홈",
-                color = Color(0xFF7E9EDE),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-            )
         }
     }
 
     @Composable
     fun UploadFab() {
         FloatingActionButton(onClick = {
-        }, backgroundColor = Color(0xFF7E9EDE)) {
+        }, backgroundColor = Blue400) {
             Icon(
                 Icons.Filled.Forward,
                 contentDescription = "",
@@ -170,62 +261,5 @@ class SecretboxActivity : ComponentActivity() {
         }
     }
 
-    @Composable
-    fun VoiceRecPage() {
-        val context = LocalContext.current
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp, 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-
-        }
-    }
-
-    @Composable
-    fun VideoRecPage() {
-        val context = LocalContext.current
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp, 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-
-        }
-    }
-
-//    @Composable
-//    fun PostCard(post: Post, onTap: (Post) -> Unit) {
-//        Column(
-//            modifier = Modifier
-//                .clip(RoundedCornerShape(8.dp))
-//                .background(Color.White)
-//                .clickable { onTap(post) }
-//                .padding(18.dp, 18.dp, 18.dp, 8.dp)
-//        ) {
-//
-//        }
-//    }
-
-    object TimeUtil {
-        private const val MAX_SEC = 60
-        private const val MAX_MIN = 60
-        private const val MAX_HOUR = 24
-        private const val MAX_DAY = 30
-        private const val MAX_MONTH = 12
-
-        fun timeToKorFormat(comparedTime: Long): String {
-            val nowTime = System.currentTimeMillis()
-            var diffTime: Long = (nowTime - comparedTime) / 1000
-            return when {
-                diffTime < MAX_SEC -> "방금 전"
-                MAX_SEC.let { diffTime /= it; diffTime } < MAX_MIN -> "${diffTime}분 전"
-                MAX_MIN.let { diffTime /= it; diffTime } < MAX_HOUR -> "${diffTime}시간 전"
-                MAX_HOUR.let { diffTime /= it; diffTime } < MAX_DAY -> "${diffTime}일 전"
-                MAX_DAY.let { diffTime /= it; diffTime } < MAX_MONTH -> "${diffTime}달 전"
-                else -> "${diffTime}년 전"
-            }
-        }
-    }
 
 }
