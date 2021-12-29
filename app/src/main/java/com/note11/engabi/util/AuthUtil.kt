@@ -4,7 +4,6 @@ import android.content.Context
 import android.hardware.fingerprint.FingerprintManager
 import android.os.Build
 import android.os.CancellationSignal
-import android.security.KeyPairGeneratorSpec
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import androidx.annotation.RequiresApi
@@ -12,7 +11,6 @@ import androidx.biometric.BiometricPrompt
 import androidx.fragment.app.FragmentActivity
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
-import javax.crypto.KeyGeneratorSpi
 
 object AuthUtil {
     private val DEFAULT_KEY: String = "FingerPrint Key"
