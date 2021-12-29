@@ -81,6 +81,7 @@ import kotlin.coroutines.suspendCoroutine
 class VideoActivity : ComponentActivity() {
     private val cameraManager by lazy { getSystemService(Context.CAMERA_SERVICE) as CameraManager }
 
+    private val DefaultFileName: String = "prepare.mp4"
     private var filePath: String? = null
 
     private val camIdMap: Map<String, CameraModel> by lazy {
@@ -112,6 +113,8 @@ class VideoActivity : ComponentActivity() {
 
     private lateinit var lateSurfaceView: AutoFitSurfaceView
 
+    private lateinit var defaultFilePath: String
+
     private val recordingState = MutableStateFlow(false)
 
     private fun previewRequest(surfaceView: SurfaceView): CaptureRequest {
@@ -121,6 +124,8 @@ class VideoActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        defaultFilePath = File(applicationContext.filesDir, DefaultFileName).absolutePath
+
         super.onCreate(savedInstanceState)
 
         hideSystemBars()
@@ -321,7 +326,7 @@ class VideoActivity : ComponentActivity() {
         }, modifier = modifier.fillMaxSize())
     }
 
-    private fun createRecorder(camera: CameraModel, surface: Surface, path: String? = null) =
+    private fun createRecorder(camera: CameraModel, surface: Surface, path: String = defaultFilePath) =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             MediaRecorder(applicationContext)
         } else {
@@ -360,7 +365,7 @@ class VideoActivity : ComponentActivity() {
         recorder = createRecorder(
             camIdMap[camIdState.value]!!,
             recorderSurface,
-            filePath
+            filePath!!
         )
         lifecycleScope.launch(Dispatchers.IO) {
             recordRequest = session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
@@ -430,6 +435,12 @@ class VideoActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            File(defaultFilePath).delete()
+        }catch (e : java.lang.Exception) {
+            Log.e(TAG, e.toString())
+        }
+
         cameraThread.quitSafely()
         recorderSurface.release()
     }
