@@ -79,7 +79,7 @@ dependencies {
 
     // Permission
     implementation 'io.github.ParkSangGwon:tedpermission-coroutine:3.3.0'
-    
+
     // Android ktx
     implementation 'androidx.activity:activity-ktx:1.4.0'
     implementation 'androidx.fragment:fragment-ktx:1.4.0'
@@ -96,6 +96,8 @@ dependencies {
 
     //datastore
     implementation 'androidx.datastore:datastore-preferences:1.0.0'
+
+    implementation "androidx.biometric:biometric:1.1.0"
 
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:29.0.0')
@@ -120,9 +122,6 @@ dependencies {
     implementation "com.squareup.okhttp3:logging-interceptor:4.9.1"
 
     implementation 'com.github.myinnos:AppIconNameChanger:1.0.7'
-
-    //biometric
-    implementation "androidx.biometric:biometric:1.1.0"
 
     // Test
     testImplementation 'junit:junit:4.13.2'

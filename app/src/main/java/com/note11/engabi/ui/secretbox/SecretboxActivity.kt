@@ -2,6 +2,7 @@ package com.note11.engabi.ui.secretbox
 
 import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.webkit.MimeTypeMap
 import android.widget.Toast
@@ -48,22 +49,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.lifecycle.lifecycleScope
+import androidx.core.os.CancellationSignal
+import androidx.fragment.app.FragmentActivity
 import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.PagerState
-import com.google.accompanist.pager.rememberPagerState
 import com.note11.engabi.BuildConfig
-import com.note11.engabi.R
-import com.note11.engabi.model.UserModel
 import com.note11.engabi.ui.theme.*
-import kotlinx.coroutines.launch
-import java.nio.file.Files
+import com.note11.engabi.util.AuthUtil
 import java.text.SimpleDateFormat
 import java.util.*
 
-class SecretboxActivity : ComponentActivity() {
+class SecretboxActivity : FragmentActivity() {
 
     private val viewModel by viewModels<SecretboxViewModel>()
     private val deleteMode by lazy { mutableStateOf(false) }
@@ -259,6 +256,16 @@ class SecretboxActivity : ComponentActivity() {
                 tint = White,
             )
         }
+    }
+
+    private var cancellationSignal: CancellationSignal? = null
+
+    private fun getCancelletionSignal(): CancellationSignal {
+        cancellationSignal = CancellationSignal()
+        cancellationSignal?.setOnCancelListener {
+        }
+
+        return cancellationSignal as CancellationSignal
     }
 
 

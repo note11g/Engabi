@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.gun0912.tedpermission.coroutine.TedPermission
 import com.note11.engabi.R
@@ -48,13 +49,14 @@ import com.note11.engabi.ui.util.CustomBottomDrawer
 import com.note11.engabi.ui.util.CustomBottomSheetLayout
 import com.note11.engabi.ui.util.CustomBottomSheetScaffold
 import com.note11.engabi.ui.video.VideoActivity
+import com.note11.engabi.util.AuthUtil
 import com.note11.engabi.util.ForegroundServiceUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     private val viewModel by viewModels<MainViewModel>()
 
     @ExperimentalMaterialApi
@@ -201,7 +203,9 @@ class MainActivity : ComponentActivity() {
             titleFontSize = 22.sp,
             subTitleFontSize = 13.sp
         ) {
-            startActivity(Intent(this, SecretboxActivity::class.java))
+            AuthUtil.auth(this, success = {
+                startActivity(Intent(this, SecretboxActivity::class.java))
+            })
         }
 
         Spacer(Modifier.size(8.dp))
